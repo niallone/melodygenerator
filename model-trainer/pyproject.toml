@@ -1,0 +1,28 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "midi-ai-model-trainer"
+version = "1.0.0"
+description = "PyTorch LSTM model trainer for AI melody generation"
+requires-python = ">=3.11"
+dependencies = [
+    "torch>=2.5.0",
+    "music21>=9.0",
+    "numpy>=1.26.0",
+    "miditok>=3.0",
+    "symusic>=0.5.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "ruff>=0.8.0",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+
+[tool.ruff]
+line-length = 120
+select = ["E", "F", "W", "I"]

@@ -1,0 +1,386 @@
+/home/ubuntu/midi-ai/train_v7.py:106: UserWarning: miditok: The `learn_bpe` method had been renamed `train`. It is now depreciated and will be removed in future updates.
+  midi_processor.tokenizer.learn_bpe(vocab_size=BPE_VOCAB_SIZE, files_paths=midi_files)
+
+
+
+Configuring PyTorch device...
+GPU available: NVIDIA H100 80GB HBM3
+Number of GPUs: 1
+Input directory:  /home/ubuntu/midi-ai/models/training_data/v5_various
+Output directory: /home/ubuntu/midi-ai/models
+Model name:       melody_generator_transformer_v7
+Creating REMI tokenizer...
+Learning BPE (vocab_size=512)...
+BPE learned. New vocab size: 512
+Processing MIDI files...
+Preparing data from directory: /home/ubuntu/midi-ai/models/training_data/v5_various
+Total MIDI files found: 275
+Train files: 248, Val files: 27
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/057 - We're Not Ashamed to Own Our Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mygirl.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/hurrlove.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/jbgood.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/134 - I Believe in Christ.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/rockarnd.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/angel.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/hollotta.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/blkisblk.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/sgrpy.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/2ndemtn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/nitesws2.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/002 - Spirit of God.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5thsymph.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/038 - Come, All Ye Sants of Zion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/boardwlk.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/069 - All Glory, Laud, and Honor.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/008 - Awake and Arise.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/112 - Savior, Redeemer of My Soul.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/2001_2.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/122 - Though Deepening Trials.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/001 - The Morning Breaks.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/019 - We Thank Thee O God For a Prophet.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/024 - God Bless Our Prophet Dear.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/131 - More Holiness Give Me.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/wipeout.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/089 - The Lord Is My Light.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/illbethr.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/072 - Praise to the Lord, the Almighty.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/svdlstdn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/067 - Glory to God on High.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/themchgs.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/043 - Zion Stands with Hills Surrounded.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/down.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/samosng.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/113 - Our Savior's Love.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/099 - Nearer, Dear Savior, to Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/007 - Israel Israel God is Calling.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gmarag.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/goodluvn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/026 - Joseph Smith's First Prayer.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/wldthing.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/aligator.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/brdwydb.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/soulm.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/056 - Softly Beams the Sacred Dawning.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/corner.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/easy.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/047 - We Will Sing of Zion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/stone.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/138 - Bless Our Fast, We Pray.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/catch.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/100 - Nearer, My God, to Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/twistnit.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/jack.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/born.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/070 - Sing Praise to Him.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/domino.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/tryme.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/lionslps.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/sockhop.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/075 - In Hymns of Praise.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/115 - Come, Ye Disconsolate.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/078 - God of Our Fathers, Whose Almight Hand.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/dearprud.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/badmoon.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5th1stmv.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/shoop.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/10ways.mid
+Error processing /home/ubuntu/midi-ai/models/training_data/v5_various/10ways.mid: MiniMidi: Unexpected EOF in running status! Cursor would be 36 bytes beyond the end of buffer with previous event length 45!: iostream error
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/strokin.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/136 - I Know That My Redeemer Lives.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/sloopy22.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/neither1.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/077 - Great Is the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/man_womn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/twstsht.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/041 - Let Zion in Her Beauty Rise.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/feelnall.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/042 - Hail to the Brightness of Zion's Glad Morning.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/045 - Lead Me into Life Eternal.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/canon.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/chain.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/132 - God Is in His Holy Temple.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/059 - Come, O Thou King of Kings.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/125 - How Gentle God's Commands.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/009 - Come Rejoice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/088 - Great God, Attend While Zion Sings.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/103 - Precious Savior, Dear Redeemer.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/shakratl.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/kissuovr.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/grapevin.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/029 - Poor Wayfaring Man of Grief.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/016 - What Glorious Scenes Mine Eyes Behold.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/godavida.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/068 - A Mighty Fortress Is Our God.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/16cndls.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/014 - Sweet Is the Peace the Gospel Brings.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/pickup.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/025 - Now We'll Sing with One Accord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/092 - For the Beauty of the Earth.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/lvngamer.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/109 - The Lord My Pasture Will Prepare.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/005 - Redeemer of Israel.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/101 - Guide me to Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/063 - Great King of Heaven.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/032 - The Happy Day at Last Has Come.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/at_hop.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/119 - Come, We The Love the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/allison.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/040 - Arise, O Glorious Zion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/clrksvll.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/thatllbe.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/labamba.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/dwander.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/m_sally.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/036 - They, the Builders of the Nation.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5th3rdmv.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/star.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/066 - Rejoice the Lord is King.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/rockroll.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/shotgun.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gr8balls.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mrbojng.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/begirl.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/139 - In Fasting We Approach Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/wholelot.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/stormy.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/hwswt.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gmanutcr.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/003 - Now Let Us Rejoice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/114 - Come Unto Him.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/034 - O Ye Mountains High.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/midnitrn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5th2ndmv.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/129 - Where Can I Turn for Peace.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/love9.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/118 - Ye Simple Souls Who Stray.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/manwomen.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/073 - Praise the Lord with Heart and Voice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/white.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/1812over.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/064 - On This Day of Joy and Gladness.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/wlkdntrn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/la_danza.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/128 - When Faith Endures.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/chapel.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/052 - The Day Dawn is Breaking.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/iswear.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/iflgd.mid
+Error processing /home/ubuntu/midi-ai/models/training_data/v5_various/iflgd.mid: Overflow while adding 0 and -4
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/rockin.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/087 - God Is Love.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/locomotn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/046 - Glorious Things of Thee Are Spoken.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/135 - My Redeemer Lives.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/018 - The Voice of God Again is Heard.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5thsym.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/knokwood.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/080 - God of Our Fathers, Known of Old.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/clown.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/096 - Dearest Children, God is Near You.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/caldremn.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/120 - Lean on My Ample Arm.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mnstrmsh.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/soap.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/028 - Saints, Behold How Great Jehovah.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/likaro.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/110 - Cast Thy Burden Upon the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/037 - The Wintry Day, Descending to Its Close.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/011 - What was Witnessed in the Heavens.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/098 - I Need Thee Every Hour.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/116 - Come, Follow Me.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/foiltugo.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/monkees.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/monday.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/076 - God of Our Fathers, We Come unto Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/tequila.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/123 - Oh, May My Soul Commune with Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/084 - Faith of Our Fathers.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/097 - Lead, Kindly Light.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/benice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/027 - Praise to the Man.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/095 - Now Thank We All Our God.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gimmesum.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/006 - High on the Mounain Top.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/sparkle.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/010 - Come Sing to the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/midngthr.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/102 - Jesus, Lover of My Soul.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/127 - Does the Journey Seem Long.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/friend.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gmmviol.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/107 - Lord, Accept Our True Devotion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/prtywman.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/poison.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/085 - How Firm a Foundation.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/058 - Come, Ye Children of the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/trouble.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/tuesday.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mygirlpw.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/030 - Come Come Ye Saints.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/137 - Testimony.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/083 - Guide Us, O Thou Great Jehovah.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/lately.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/071 - With Songs of Praise.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/icansee1.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/bluebery.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/061 - Raise Your Voices to the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/044 - Beautiful Zion, Built Above.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/065 - Come, All Ye Saints Who Dwell on Earth.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mnyhny.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/grenonio.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/busrider.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/050 - Come, Thou Glorious Day of Promise.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/004 - Truth Eternal.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/049 - Adam-Ondi-Ahman.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/way_u_do.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/023 We Ever Pray for Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/aint2prd.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/039 - O Saints of Zion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/051 - Sons of Michael, He Approaches.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/chanti.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/louiepw.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/runaway_.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/142 - Sweet Hour of Prayer.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/017 - Awake, Ye Saints of God, Awake.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/074 - Praise Ye the Lord.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/labamba1.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/055 - Lo, the Might God Appearing.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/5thsymp.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/130 - Be Thou Humble.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/sleepwlk.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/perogatv.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/2ptinv1.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/081 - Press Forward Saints.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/035 - For the Strength of Hills.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/079 - With All the Power of Heart and Tongue.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/140 - Did You Think to Pray.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/stbyme.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/104 - Jesus, Savior Pilot Me.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/alright.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/hanginmt.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/boogieon.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/ivegotta.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/76tmbons.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/106 - God Speed the Right.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/udontno.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/shemoves.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/121 - I'm a Pilgrim, I'm a Stranger.mid
+Total REMI tokens: 5500668
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/105 - Master, the Tempest Is Raging.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/76tubas.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/033 - Our Mountain Home So Dear.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/053 - Let Earth's Inhabitants Rejoice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/silence.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/hanginon.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/133 - Father in Heaven.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/111 - Rock of Ages.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mrcymrcy.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/soundsil.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/060 - Battle Hymn of the Republic.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/048 - Glorious Things are Sung of Zion.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/020 - God of Power God of Right.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gmviolin.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/gmconcer.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/117 - Come Unto Jesus.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/141 - Jesus, the Very Thought of Thee.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/021 - Come, Listen to a Prophet's Voice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/013 - An Angel from on High.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/022 - We Listen to a Prophet's Voice.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/toohot.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/judy.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/031 - O God Our Help in Ages Past.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/126 - How Long, O Lord Most Holy and True.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/mgccrpt.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/thisold.mid
+Processing (REMI): /home/ubuntu/midi-ai/models/training_data/v5_various/108 - The Lord Is My Shepherd.mid
+Total REMI tokens: 160033
+Preparing sequences (length=256, stride=64)...
+Preparing sequences from 5500668 items (stride=64)...
+REMI sequences prepared. Input shape: (85944, 256), n_vocab: 512
+Sequences: 85944, Vocab size: 512
+Building MusicTransformer...
+Model parameters: 33,825,280
+Starting training...
+Training Transformer with 100 epochs, batch=64, accum=2
+Model parameters: 33,825,280
+Using BF16 mixed precision
+Train samples: 77350, Val samples: 8594
+Epoch 1/100 - Train: 3.9067 - Val: 1.8325 - LR: 0.000091
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-01-1.8325.pt
+Epoch 2/100 - Train: 1.3590 - Val: 0.9051 - LR: 0.000181
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-02-0.9051.pt
+Epoch 3/100 - Train: 0.8030 - Val: 0.5574 - LR: 0.000272
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-03-0.5574.pt
+Epoch 4/100 - Train: 0.5409 - Val: 0.3616 - LR: 0.000300
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-04-0.3616.pt
+Epoch 5/100 - Train: 0.3770 - Val: 0.2557 - LR: 0.000300
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-05-0.2557.pt
+Epoch 6/100 - Train: 0.2846 - Val: 0.1985 - LR: 0.000299
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-06-0.1985.pt
+Epoch 7/100 - Train: 0.2304 - Val: 0.1639 - LR: 0.000299
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-07-0.1639.pt
+Epoch 8/100 - Train: 0.1967 - Val: 0.1454 - LR: 0.000298
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-08-0.1454.pt
+Epoch 9/100 - Train: 0.1736 - Val: 0.1342 - LR: 0.000297
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-09-0.1342.pt
+Epoch 10/100 - Train: 0.1583 - Val: 0.1251 - LR: 0.000296
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-10-0.1251.pt
+Epoch 11/100 - Train: 0.1450 - Val: 0.1192 - LR: 0.000295
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-11-0.1192.pt
+Epoch 12/100 - Train: 0.1352 - Val: 0.1153 - LR: 0.000294
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-12-0.1153.pt
+Epoch 13/100 - Train: 0.1266 - Val: 0.1109 - LR: 0.000293
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-13-0.1109.pt
+Epoch 14/100 - Train: 0.1196 - Val: 0.1090 - LR: 0.000291
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-14-0.1090.pt
+Epoch 15/100 - Train: 0.1147 - Val: 0.1052 - LR: 0.000289
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-15-0.1052.pt
+Epoch 16/100 - Train: 0.1082 - Val: 0.1037 - LR: 0.000287
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-16-0.1037.pt
+Epoch 17/100 - Train: 0.1036 - Val: 0.1012 - LR: 0.000285
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-17-0.1012.pt
+Epoch 18/100 - Train: 0.0995 - Val: 0.1009 - LR: 0.000283
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-18-0.1009.pt
+Epoch 19/100 - Train: 0.0958 - Val: 0.0994 - LR: 0.000281
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-19-0.0994.pt
+Epoch 20/100 - Train: 0.0921 - Val: 0.0985 - LR: 0.000278
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-20-0.0985.pt
+Epoch 21/100 - Train: 0.0888 - Val: 0.0980 - LR: 0.000276
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-21-0.0980.pt
+Epoch 22/100 - Train: 0.0865 - Val: 0.0984 - LR: 0.000273
+Epoch 23/100 - Train: 0.0839 - Val: 0.0970 - LR: 0.000270
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-23-0.0970.pt
+Epoch 24/100 - Train: 0.0828 - Val: 0.0964 - LR: 0.000267
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-24-0.0964.pt
+Epoch 25/100 - Train: 0.0772 - Val: 0.0961 - LR: 0.000264
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-25-0.0961.pt
+Epoch 26/100 - Train: 0.0758 - Val: 0.0960 - LR: 0.000261
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-26-0.0960.pt
+Epoch 27/100 - Train: 0.0734 - Val: 0.0960 - LR: 0.000258
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-27-0.0960.pt
+Epoch 28/100 - Train: 0.0716 - Val: 0.0961 - LR: 0.000254
+Epoch 29/100 - Train: 0.0698 - Val: 0.0962 - LR: 0.000251
+Epoch 30/100 - Train: 0.0679 - Val: 0.0952 - LR: 0.000247
+Checkpoint saved: /home/ubuntu/midi-ai/models/weights-improvement-30-0.0952.pt
+Epoch 31/100 - Train: 0.0662 - Val: 0.0957 - LR: 0.000243
+Epoch 32/100 - Train: 0.0645 - Val: 0.0966 - LR: 0.000239
+Epoch 33/100 - Train: 0.0629 - Val: 0.0960 - LR: 0.000235
+Epoch 34/100 - Train: 0.0615 - Val: 0.0965 - LR: 0.000231
+Epoch 35/100 - Train: 0.0602 - Val: 0.0961 - LR: 0.000227
+Epoch 36/100 - Train: 0.0587 - Val: 0.0964 - LR: 0.000223
+Epoch 37/100 - Train: 0.0575 - Val: 0.0974 - LR: 0.000219
+Epoch 38/100 - Train: 0.0562 - Val: 0.0973 - LR: 0.000214
+Epoch 39/100 - Train: 0.0549 - Val: 0.0972 - LR: 0.000210
+Epoch 40/100 - Train: 0.0546 - Val: 0.0973 - LR: 0.000205
+Epoch 41/100 - Train: 0.0525 - Val: 0.0981 - LR: 0.000201
+Epoch 42/100 - Train: 0.0514 - Val: 0.0976 - LR: 0.000196
+Epoch 43/100 - Train: 0.0505 - Val: 0.0983 - LR: 0.000191
+Epoch 44/100 - Train: 0.0496 - Val: 0.0981 - LR: 0.000187
+Epoch 45/100 - Train: 0.0487 - Val: 0.0985 - LR: 0.000182
+Early stopping after 45 epochs
+Training completed. Best val loss: 0.0952
+Model saved to /home/ubuntu/midi-ai/models/melody_generator_transformer_v7.pt
+Seeds saved to /home/ubuntu/midi-ai/models/melody_generator_transformer_v7_seeds.json
+Tokenizer saved to /home/ubuntu/midi-ai/models/melody_generator_transformer_v7_tokenizer
+Training complete.

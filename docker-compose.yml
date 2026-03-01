@@ -1,0 +1,160 @@
+x-common-deploy: &common-deploy
+  restart_policy:
+    condition: on-failure
+    max_attempts: 3
+  update_config:
+    parallelism: 1
+    order: stop-first
+
+x-common-timezone: &common-timezone
+  environment:
+    - TZ=Australia/Brisbane
+
+services:
+
+  nginx-proxy:
+    image: nginxproxy/nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+      - ./backend/proxy/certs:/etc/nginx/certs:rw
+      - ./backend/proxy/vhost.d:/etc/nginx/vhost.d
+      - ./backend/proxy/html:/usr/share/nginx/html
+      - ./backend/proxy/dhparam:/etc/nginx/dhparam
+      - ./backend/nginx-proxy-config:/etc/nginx/conf.d
+    networks:
+      - melodygenerator-net
+    deploy: *common-deploy
+    <<: *common-timezone
+
+  acme-companion:
+    image: nginxproxy/acme-companion
+    container_name: nginx-proxy-acme
+    volumes_from:
+      - nginx-proxy
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+      - ./backend/proxy/acme:/etc/acme.sh
+      - ./backend/proxy/certs:/etc/nginx/certs:rw
+    environment:
+      - DEFAULT_EMAIL=${ACME_EMAIL:-admin@melodygenerator.fun}
+    networks:
+      - melodygenerator-net
+    depends_on:
+      - nginx-proxy
+    <<: *common-timezone
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4050}
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:4050
+      - VIRTUAL_HOST=melodygenerator.fun
+      - VIRTUAL_PORT=3000
+      - LETSENCRYPT_HOST=melodygenerator.fun
+    networks:
+      - melodygenerator-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      <<: *common-deploy
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+    <<: *common-timezone
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/api/Dockerfile
+    volumes:
+      - ./backend/api/app/output:/usr/src/api/app/output
+      - ./models:/usr/src/api/app/model
+    environment:
+      - VIRTUAL_HOST=api.melodygenerator.fun
+      - VIRTUAL_PORT=4050
+      - LETSENCRYPT_HOST=api.melodygenerator.fun
+      - PROXY_READ_TIMEOUT=300s
+      - PROXY_SEND_TIMEOUT=300s
+      - PROXY_CONNECT_TIMEOUT=300s
+    env_file:
+      - ./backend/api/.env
+      - ./backend/postgres/.env
+    restart: always
+    depends_on:
+      postgres:
+          condition: service_healthy
+    networks:
+      - melodygenerator-net
+    ports:
+      - "4050:4050"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      <<: *common-deploy
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+    <<: *common-timezone
+
+  model-trainer:
+    build:
+      context: .
+      dockerfile: model-trainer/Dockerfile
+    volumes:
+      - ./models/training_data:/app/input
+      - ./models:/app/model
+    environment:
+      - INPUT_DIR=/app/input
+      - OUTPUT_DIR=/app/model
+    networks:
+      - melodygenerator-net
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    stdin_open: true
+    tty: true
+    <<: *common-timezone
+
+  postgres:
+    image: postgres:16
+    volumes:
+      - ./backend/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - postgres-data:/var/lib/postgresql/data
+    env_file:
+      - ./backend/postgres/.env
+    networks:
+      - melodygenerator-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "melodygenerator_user", "-d", "melodygenerator_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy: *common-deploy
+    <<: *common-timezone
+
+volumes:
+  postgres-data:
+
+networks:
+  melodygenerator-net:
+    driver: bridge

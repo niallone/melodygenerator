@@ -1,0 +1,14 @@
+**/__pycache__
+**/*.pyc
+**/.pytest_cache
+**/.coverage
+**/htmlcov
+**/.venv
+**/.git
+**/.DS_Store
+**/node_modules
+*.pt
+*.h5
+*.pkl
+models/training_data
+.github

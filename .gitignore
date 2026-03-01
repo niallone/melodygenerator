@@ -1,0 +1,35 @@
+node_modules/
+.next/
+package-lock.json
+.DS_Store
+.venv/
+scripts/.venv/
+
+# Environment files
+.env
+.env.*
+!.env.example
+!.env.*.example
+
+# Generated output
+backend/api/app/output/
+output/
+**/generated_melody*
+
+# IDE
+.idea/
+.vscode/
+
+# Python
+__pycache__/
+*.pyc
+.pytest_cache/
+dist/
+build/
+*.egg-info/
+htmlcov/
+.coverage
+
+# Misc
+folder_contents.txt
+proxy

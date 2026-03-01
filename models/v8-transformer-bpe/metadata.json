@@ -1,0 +1,7 @@
+{
+  "pitchnames": null,
+  "note_to_int": null,
+  "n_vocab": 1024,
+  "tokenizer_type": "REMI",
+  "tokenizer_path": "tokenizer"
+}
