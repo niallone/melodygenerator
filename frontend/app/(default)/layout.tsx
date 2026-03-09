@@ -16,6 +16,11 @@ function MagazineHeader() {
                 </Link>
               </li>
               <li>
+                <Link href="/studio" className="text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white transition-colors">
+                  Studio
+                </Link>
+              </li>
+              <li>
                 <Link href="/about" className="text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white transition-colors">
                   About
                 </Link>
