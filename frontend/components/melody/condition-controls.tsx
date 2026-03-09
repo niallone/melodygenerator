@@ -12,7 +12,7 @@ interface ConditionControlsProps {
   onStyleChange: (value: string) => void;
 }
 
-const selectClass = "w-full p-2.5 text-sm bg-surface dark:bg-dark-surface-elevated text-text-primary dark:text-dark-text-primary border border-border dark:border-dark-border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary";
+const selectClass = "w-full p-2.5 text-sm bg-white/[0.02] text-white border border-white/[0.08] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500";
 
 export default function ConditionControls({
   conditions,
@@ -27,11 +27,11 @@ export default function ConditionControls({
 
   return (
     <div className="space-y-3">
-      <h4 className="text-sm font-semibold text-text-primary dark:text-dark-text-primary">Conditions (optional)</h4>
+      <h4 className="text-sm font-semibold text-white">Conditions (optional)</h4>
 
       {conditions.keys && (
         <div>
-          <label className="block text-sm text-text-secondary dark:text-dark-text-secondary mb-1">Key Signature</label>
+          <label className="block text-sm text-white/50 mb-1">Key Signature</label>
           <select value={keySignature} onChange={(e) => onKeyChange(e.target.value)} className={selectClass}>
             <option value="">Any</option>
             {conditions.keys.map((key) => (
@@ -43,7 +43,7 @@ export default function ConditionControls({
 
       {conditions.tempos && (
         <div>
-          <label className="block text-sm text-text-secondary dark:text-dark-text-secondary mb-1">
+          <label className="block text-sm text-white/50 mb-1">
             Tempo: {tempo || 'Any'} {tempo ? 'BPM' : ''}
           </label>
           <select value={tempo} onChange={(e) => onTempoChange(e.target.value)} className={selectClass}>
@@ -57,7 +57,7 @@ export default function ConditionControls({
 
       {conditions.styles && (
         <div>
-          <label className="block text-sm text-text-secondary dark:text-dark-text-secondary mb-1">Style</label>
+          <label className="block text-sm text-white/50 mb-1">Style</label>
           <select value={style} onChange={(e) => onStyleChange(e.target.value)} className={selectClass}>
             <option value="">Any</option>
             {conditions.styles.map((s) => (

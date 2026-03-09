@@ -55,11 +55,11 @@ export default function Gallery({ refreshKey }: GalleryProps) {
   }
 
   if (error && melodies.length === 0) {
-    return <p className="text-error">{error}</p>;
+    return <p className="text-red-400">{error}</p>;
   }
 
   if (melodies.length === 0) {
-    return <p className="text-text-secondary dark:text-dark-text-secondary">No melodies yet. Generate one above!</p>;
+    return <p className="text-white/50">No melodies yet. Generate one above!</p>;
   }
 
   return (

@@ -56,9 +56,9 @@ const AdvancedOptions = memo(function AdvancedOptions({
   }, [dispatch]);
 
   return (
-    <div className="mb-4 p-5 border border-border dark:border-dark-border rounded-xl space-y-5 bg-surface-elevated dark:bg-dark-surface-elevated transition-colors">
+    <div className="mb-4 p-5 border border-white/[0.08] rounded-xl space-y-5 bg-white/[0.03] transition-colors">
       <div>
-        <label htmlFor="temperature-slider" className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-1.5">
+        <label htmlFor="temperature-slider" className="block text-sm font-medium text-white mb-1.5">
           Temperature: {temperature.toFixed(2)}
         </label>
         <input
@@ -72,14 +72,14 @@ const AdvancedOptions = memo(function AdvancedOptions({
           className="w-full"
           aria-label="Temperature"
         />
-        <div className="flex justify-between text-xs text-text-secondary dark:text-dark-text-secondary mt-1">
+        <div className="flex justify-between text-xs text-white/50 mt-1">
           <span>Conservative (0.1)</span>
           <span>Creative (2.0)</span>
         </div>
       </div>
 
       <div>
-        <label htmlFor="topk-slider" className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-1.5">
+        <label htmlFor="topk-slider" className="block text-sm font-medium text-white mb-1.5">
           Top-K: {topK}
         </label>
         <input
@@ -93,14 +93,14 @@ const AdvancedOptions = memo(function AdvancedOptions({
           className="w-full"
           aria-label="Top-K sampling"
         />
-        <div className="flex justify-between text-xs text-text-secondary dark:text-dark-text-secondary mt-1">
+        <div className="flex justify-between text-xs text-white/50 mt-1">
           <span>Off (0)</span>
           <span>500</span>
         </div>
       </div>
 
       <div>
-        <label htmlFor="topp-slider" className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-1.5">
+        <label htmlFor="topp-slider" className="block text-sm font-medium text-white mb-1.5">
           Top-P (Nucleus): {topP.toFixed(2)}
         </label>
         <input
@@ -114,14 +114,14 @@ const AdvancedOptions = memo(function AdvancedOptions({
           className="w-full"
           aria-label="Top-P nucleus sampling"
         />
-        <div className="flex justify-between text-xs text-text-secondary dark:text-dark-text-secondary mt-1">
+        <div className="flex justify-between text-xs text-white/50 mt-1">
           <span>Focused (0.1)</span>
           <span>Full (1.0)</span>
         </div>
       </div>
 
       <div>
-        <label htmlFor="numnotes-slider" className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-1.5">
+        <label htmlFor="numnotes-slider" className="block text-sm font-medium text-white mb-1.5">
           Notes: {numNotes}
         </label>
         <input
@@ -135,27 +135,27 @@ const AdvancedOptions = memo(function AdvancedOptions({
           className="w-full"
           aria-label="Number of notes"
         />
-        <div className="flex justify-between text-xs text-text-secondary dark:text-dark-text-secondary mt-1">
+        <div className="flex justify-between text-xs text-white/50 mt-1">
           <span>50</span>
           <span>2000</span>
         </div>
       </div>
 
       <div>
-        <label htmlFor="seed-midi-upload" className="block text-sm font-medium text-text-primary dark:text-dark-text-primary mb-1.5">Continue from MIDI (optional)</label>
+        <label htmlFor="seed-midi-upload" className="block text-sm font-medium text-white mb-1.5">Continue from MIDI (optional)</label>
         <div className="flex items-center gap-2">
           <input
             id="seed-midi-upload"
             type="file"
             accept=".mid,.midi"
             onChange={onFileUpload}
-            className="text-sm text-text-secondary dark:text-dark-text-secondary"
+            className="text-sm text-white/50"
             aria-label="Upload seed MIDI file"
           />
           {seedFileName && (
-            <span className="text-sm flex items-center gap-1 text-text-secondary dark:text-dark-text-secondary">
+            <span className="text-sm flex items-center gap-1 text-white/50">
               {seedFileName}
-              <button onClick={onClearSeed} className="text-error cursor-pointer hover:opacity-70 transition-opacity" aria-label="Remove seed file">x</button>
+              <button onClick={onClearSeed} className="text-red-400 cursor-pointer hover:opacity-70 transition-opacity" aria-label="Remove seed file">x</button>
             </span>
           )}
         </div>
@@ -180,7 +180,7 @@ const AdvancedOptions = memo(function AdvancedOptions({
           checked={useStreaming}
           onChange={handleStreamingChange}
         />
-        <label htmlFor="streaming-toggle" className="text-sm text-text-primary dark:text-dark-text-primary">
+        <label htmlFor="streaming-toggle" className="text-sm text-white">
           Stream generation (real-time playback)
         </label>
       </div>

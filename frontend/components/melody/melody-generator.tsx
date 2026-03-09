@@ -162,7 +162,7 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
           <LoadingSpinner />
         </div>
       ) : state.loadError ? (
-        <p className="text-error">{state.loadError}</p>
+        <p className="text-red-400">{state.loadError}</p>
       ) : (
         <>
           <GenerationControls
@@ -176,7 +176,7 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
 
           <button
             onClick={() => dispatch({ type: 'SET_PARAM', key: 'showAdvanced', value: !state.showAdvanced })}
-            className="text-sm text-primary dark:text-primary-light mb-4 cursor-pointer hover:underline font-medium transition-colors"
+            className="text-sm text-indigo-400 mb-4 cursor-pointer hover:underline font-medium transition-colors"
             aria-expanded={state.showAdvanced}
           >
             {state.showAdvanced ? 'Hide' : 'Show'} Advanced Options
@@ -208,18 +208,18 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
 
       {streaming.isStreaming && (
         <div className="mt-4 animate-fade-in-up">
-          <div className="text-sm mb-2 text-text-secondary dark:text-dark-text-secondary">
+          <div className="text-sm mb-2 text-white/50">
             Generating: {streaming.progress}/{streaming.totalNotes} notes
           </div>
           <div
-            className="w-full bg-border dark:bg-dark-border rounded-full h-2 overflow-hidden"
+            className="w-full bg-border rounded-full h-2 overflow-hidden"
             role="progressbar"
             aria-valuenow={streaming.progress}
             aria-valuemin={0}
             aria-valuemax={streaming.totalNotes}
           >
             <div
-              className="bg-primary h-2 rounded-full transition-all duration-300 ease-out"
+              className="bg-indigo-500 h-2 rounded-full transition-all duration-300 ease-out"
               style={{ width: `${streaming.totalNotes ? (streaming.progress / streaming.totalNotes) * 100 : 0}%` }}
             />
           </div>
@@ -227,8 +227,8 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
         </div>
       )}
 
-      {error && <p className="text-error mt-2">{error}</p>}
-      {streaming.error && <p className="text-error mt-2">{streaming.error}</p>}
+      {error && <p className="text-red-400 mt-2">{error}</p>}
+      {streaming.error && <p className="text-red-400 mt-2">{streaming.error}</p>}
     </section>
   );
 }

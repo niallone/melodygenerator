@@ -89,13 +89,13 @@ export function MelodyPlayer({ url, isActive, onPlay }: MelodyPlayerProps) {
       />
 
       {error ? (
-        <p className="text-error text-sm text-center">{error}</p>
+        <p className="text-red-400 text-sm text-center">{error}</p>
       ) : (
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
             <button
               onClick={handlePlayPause}
-              className="w-10 h-10 flex items-center justify-center rounded-full bg-primary text-white flex-shrink-0 hover:bg-primary-dark active:scale-95 transition-all shadow-sm"
+              className="w-10 h-10 flex items-center justify-center rounded-full bg-indigo-500 text-white flex-shrink-0 hover:bg-indigo-600 active:scale-95 transition-all shadow-sm"
               aria-label={isPlaying ? 'Pause' : 'Play'}
             >
               {isPlaying ? (
@@ -115,15 +115,15 @@ export function MelodyPlayer({ url, isActive, onPlay }: MelodyPlayerProps) {
               onClick={handleSeek}
               onTouchStart={handleSeek}
             >
-              <div className="w-full h-1.5 bg-border dark:bg-dark-border rounded-full overflow-hidden">
+              <div className="w-full h-1.5 bg-border rounded-full overflow-hidden">
                 <div
-                  className="h-full bg-primary rounded-full transition-all duration-100"
+                  className="h-full bg-indigo-500 rounded-full transition-all duration-100"
                   style={{ width: `${progress}%` }}
                 />
               </div>
             </div>
 
-            <span className="text-xs text-text-secondary dark:text-dark-text-secondary flex-shrink-0 w-12 text-right tabular-nums">
+            <span className="text-xs text-white/50 flex-shrink-0 w-12 text-right tabular-nums">
               {formatTime(currentTime)}/{formatTime(duration)}
             </span>
           </div>
