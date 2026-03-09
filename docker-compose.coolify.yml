@@ -1,0 +1,116 @@
+services:
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        NEXT_PUBLIC_API_URL: https://api.melodygenerator.fun
+    environment:
+      - NEXT_PUBLIC_API_URL=https://api.melodygenerator.fun
+      - TZ=Australia/Brisbane
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mg-frontend.rule=Host(`melodygenerator.fun`)
+      - traefik.http.routers.mg-frontend.entryPoints=https
+      - traefik.http.routers.mg-frontend.tls=true
+      - traefik.http.routers.mg-frontend.tls.certresolver=letsencrypt
+      - traefik.http.routers.mg-frontend.service=mg-frontend
+      - traefik.http.routers.mg-frontend-http.rule=Host(`melodygenerator.fun`)
+      - traefik.http.routers.mg-frontend-http.entryPoints=http
+      - traefik.http.routers.mg-frontend-http.middlewares=mg-redirect-https
+      - traefik.http.middlewares.mg-redirect-https.redirectscheme.scheme=https
+      - traefik.http.services.mg-frontend.loadbalancer.server.port=3000
+    networks:
+      - melodygenerator-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 512M
+          cpus: "0.5"
+
+  api:
+    build:
+      context: .
+      dockerfile: backend/api/Dockerfile
+    volumes:
+      - "./backend/api/app/output:/usr/src/api/app/output"
+      - "./models:/usr/src/api/app/model"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.mg-api.rule=Host(`api.melodygenerator.fun`)
+      - traefik.http.routers.mg-api.entryPoints=https
+      - traefik.http.routers.mg-api.tls=true
+      - traefik.http.routers.mg-api.tls.certresolver=letsencrypt
+      - traefik.http.routers.mg-api.service=mg-api
+      - traefik.http.routers.mg-api-http.rule=Host(`api.melodygenerator.fun`)
+      - traefik.http.routers.mg-api-http.entryPoints=http
+      - traefik.http.routers.mg-api-http.middlewares=mg-redirect-https
+      - traefik.http.services.mg-api.loadbalancer.server.port=4050
+    environment:
+      TZ: Australia/Brisbane
+      API_URL: https://api.melodygenerator.fun
+      APP_URL: https://melodygenerator.fun
+      OUTPUT_DIR: /usr/src/api/app/output
+      MODEL_DIR: /usr/src/api/app/model
+      SOUNDFONT_PATH: /usr/share/sounds/sf2/FluidR3_GM.sf2
+      ALLOWED_ORIGINS: https://melodygenerator.fun
+      DEBUG: "false"
+      LOGGING_LEVEL: INFO
+      PG_DB_HOST: postgres
+      PG_DB_PORT: "5432"
+      PG_DB_MIN_CONNECTIONS: "10"
+      PG_DB_MAX_CONNECTIONS: "100"
+      PG_DB_COMMAND_TIMEOUT: "60"
+      PG_DB_MAX_INACTIVE_CONNECTION_LIFETIME: "300"
+    restart: always
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - melodygenerator-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4050/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+      resources:
+        limits:
+          memory: 2G
+          cpus: "2.0"
+
+  postgres:
+    image: "postgres:16"
+    volumes:
+      - "./backend/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql:ro"
+      - "postgres-data:/var/lib/postgresql/data"
+    environment:
+      TZ: Australia/Brisbane
+    networks:
+      - melodygenerator-net
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "melodygenerator_user", "-d", "melodygenerator_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    deploy:
+      restart_policy:
+        condition: on-failure
+        max_attempts: 3
+
+volumes:
+  postgres-data: null
+
+networks:
+  melodygenerator-net:
+    driver: bridge
