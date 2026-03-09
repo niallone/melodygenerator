@@ -2,10 +2,10 @@
 FROM pytorch/pytorch:2.5.1-cuda12.4-cudnn9-runtime
 
 # Set the working directory in the container
-WORKDIR /app
+WORKDIR /usr/src
 
 # Set environment variables
-ENV PYTHONPATH=/app:/usr/src:$PYTHONPATH
+ENV PYTHONPATH=/usr/src:$PYTHONPATH
 
 # Install system dependencies
 # libsndfile1 is required for audio file processing
@@ -17,15 +17,17 @@ RUN apt-get update && apt-get install -y \
 COPY shared/ /usr/src/shared/
 
 # Copy the project files into the container
-COPY model-trainer/pyproject.toml .
-COPY model-trainer/app/ app/
+COPY model-trainer/pyproject.toml /usr/src/model-trainer/
+COPY model-trainer/app/ /usr/src/model-trainer/app/
+COPY model-trainer/configs/ /usr/src/model-trainer/configs/
 
 # Install Python dependencies
+WORKDIR /usr/src/model-trainer
 RUN pip install --no-cache-dir .
 
 # Create non-root user
 RUN useradd -m appuser
 USER appuser
 
-# Set the command to run the application
-CMD ["python", "app/main.py"]
+# Default: train with a config file (override in docker-compose or CLI)
+CMD ["python", "-m", "app.train", "--config", "configs/v8-transformer-bpe.yaml"]

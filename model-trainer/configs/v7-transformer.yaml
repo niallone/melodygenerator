@@ -1,0 +1,31 @@
+name: melody_generator_transformer_v7
+architecture: transformer
+
+# Tokenization
+tokenizer: remi
+bpe_vocab_size: 512
+
+# Data
+input_dir: /app/input
+output_dir: /app/model
+sequence_length: 256
+stride: 64
+
+# Model
+d_model: 512
+n_heads: 8
+n_layers: 8
+d_ff: 2048
+max_seq_len: 512
+dropout: 0.1
+
+# Training
+epochs: 100
+batch_size: 64
+learning_rate: 3e-4
+weight_decay: 0.01
+grad_clip_max_norm: 1.0
+warmup_steps: 2000
+accumulation_steps: 2
+validation_split: 0.1
+early_stopping_patience: 15

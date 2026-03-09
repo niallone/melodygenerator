@@ -17,6 +17,68 @@ Try it at [melodygenerator.fun](https://melodygenerator.fun).
 - Rate-limited API endpoints
 - User authentication with JWT and token revocation
 
+## Architecture
+
+```mermaid
+graph TB
+    subgraph Client["Frontend (Next.js 15 · TypeScript)"]
+        UI[React UI]
+        Tone[Tone.js Synth]
+        Canvas[Piano Roll Canvas]
+    end
+
+    subgraph API["Backend (FastAPI)"]
+        REST[REST Endpoints]
+        WS[WebSocket Streaming]
+        Gen[Melody Generator Service]
+        MIDI[MIDI / WAV Conversion]
+    end
+
+    subgraph Inference["PyTorch Inference"]
+        LSTM[MelodyLSTM v2-v6]
+        TF[MusicTransformer v7-v8]
+        Sampler["Top-k / Top-p / Temperature\nSampling"]
+    end
+
+    subgraph Training["Model Trainer (Offline · GPU)"]
+        MIDIFiles[("MIDI Files\n+ MAESTRO")]
+        Proc["MIDI Processor\n(music21)"]
+        Tok["MidiTok REMI\nTokenizer"]
+        BPE["BPE Compression\n(learned vocab)"]
+        Seq["Sequence Preparation\n(sliding window + stride)"]
+        Builder["Model Builder\n(LSTM / Transformer)"]
+        Loop["Training Loop\n(AdamW · Cosine LR · Early Stopping)"]
+        Eval["Evaluation\n(Perplexity · Repetition · Pitch Distribution)"]
+        WandB["W&B Experiment Tracking"]
+    end
+
+    DB[(PostgreSQL)]
+    FS[("Model Weights\n+ Tokenizer\n+ Seeds")]
+
+    UI -->|HTTP POST /generate| REST
+    UI -->|WebSocket| WS
+    REST --> Gen
+    WS --> Gen
+    Gen --> LSTM
+    Gen --> TF
+    LSTM --> Sampler
+    TF --> Sampler
+    Sampler --> MIDI
+    MIDI -->|WAV / MIDI files| UI
+    WS -->|Note events| Tone
+    WS -->|Note events| Canvas
+    REST -->|Gallery queries| DB
+    Gen -->|Save metadata| DB
+
+    MIDIFiles --> Proc
+    Proc --> Tok --> BPE --> Seq
+    Seq --> Builder --> Loop
+    Loop --> Eval
+    Loop -->|Checkpoints + metadata| FS
+    Loop -.->|Metrics per epoch| WandB
+    FS -->|Load on startup| Gen
+```
+
 ## Tech Stack
 
 | Layer | Technology |
@@ -31,11 +93,12 @@ Try it at [melodygenerator.fun](https://melodygenerator.fun).
 
 ```
 melodygenerator/
-├── frontend/           # Next.js app (App Router)
+├── frontend/           # Next.js 15 app (TypeScript, App Router)
 │   ├── app/            # Pages and layouts
 │   ├── components/     # UI components (melody, layout, common)
 │   ├── hooks/          # Custom React hooks
 │   ├── context/        # React Context (MelodyContext)
+│   ├── types/          # Shared TypeScript interfaces
 │   └── utils/          # API client, WebSocket helpers
 ├── backend/
 │   ├── api/            # FastAPI application
@@ -47,12 +110,16 @@ melodygenerator/
 │   └── postgres/       # DB schema (init.sql)
 ├── shared/
 │   └── models/         # Shared PyTorch model definitions (MelodyLSTM, MusicTransformer)
-├── model-trainer/      # PyTorch training pipeline
+├── model-trainer/      # Config-driven PyTorch training pipeline
+│   ├── configs/               # YAML training configs per model version
+│   │   ├── v6-lstm-remi.yaml
+│   │   ├── v7-transformer.yaml
+│   │   └── v8-transformer-bpe.yaml
 │   └── app/
-│       ├── main.py             # Training orchestration (interactive CLI)
-│       ├── midi_processor.py   # MIDI tokenization (Legacy + REMI + BPE)
-│       ├── model_builder.py    # LSTM model factory
-│       └── model_trainer.py    # Training loop (AdamW, cosine LR, early stopping)
+│       ├── train.py           # Single entry point (python -m app.train --config ...)
+│       ├── config.py          # Dataclass config + YAML loader with CLI overrides
+│       ├── data/              # Data pipeline (processor, tokenizer, augmentation)
+│       └── training/          # Unified trainer + LR schedulers
 ├── models/             # Trained model weights and metadata
 │   ├── v2-rnb/         # LSTM model trained on R&B/hip-hop
 │   ├── v3-dance/       # LSTM model trained on dance music
@@ -142,28 +209,29 @@ uvicorn wsgi:app --host 0.0.0.0 --port 4050 --reload
 
 ## Model Training
 
-The model trainer supports LSTM and Transformer architectures with MidiTok REMI tokenization (with optional BPE) or legacy pitch-string extraction.
+The model trainer is config-driven: each model version is defined as a YAML file and trained with a single command. Supports LSTM and Transformer architectures with REMI tokenization (optional BPE) or legacy pitch-string encoding.
 
-### Training Configuration
+### Training a Model
 
-Key parameters in `model-trainer/app/config.py`:
+```bash
+# Train v8 Transformer with REMI + BPE
+cd model-trainer
+pip install -e .
+python -m app.train --config configs/v8-transformer-bpe.yaml
 
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| EPOCHS | 50 | Training epochs |
-| BATCH_SIZE | 64 | Batch size |
-| LEARNING_RATE | 1e-3 | AdamW learning rate |
-| SEQUENCE_LENGTH | 100 | Input sequence length |
-| VALIDATION_SPLIT | 0.1 | Train/validation split |
-| EARLY_STOPPING_PATIENCE | 10 | Epochs without improvement before stopping |
+# Override paths and enable W&B tracking
+python -m app.train --config configs/v7-transformer.yaml \
+  --input-dir /data/midi --output-dir /data/models --wandb
 
-Standalone training scripts (e.g. `train_v8.py`) override these defaults with model-specific hyperparameters.
-
-### Running the Trainer
+# Train LSTM variant
+python -m app.train --config configs/v6-lstm-remi.yaml
+```
 
 **With Docker (GPU required):**
 ```bash
 docker compose run model-trainer
+# Or with a specific config:
+docker compose run model-trainer python -m app.train --config configs/v7-transformer.yaml
 ```
 
 Requires NVIDIA GPU with the Docker runtime configured:
@@ -171,14 +239,26 @@ Requires NVIDIA GPU with the Docker runtime configured:
 nvidia-ctk runtime configure --runtime=docker
 ```
 
-**Directly on a GPU server:**
-```bash
-cd model-trainer
-pip install -e .
-python app/main.py
+### Training Configuration
+
+Each YAML config specifies the full training run. Example (`configs/v8-transformer-bpe.yaml`):
+
+```yaml
+name: melody_generator_transformer_v8
+architecture: transformer
+tokenizer: remi
+bpe_vocab_size: 1024
+sequence_length: 256
+stride: 64
+epochs: 100
+batch_size: 64
+learning_rate: 3e-4
+warmup_steps: 4000
+accumulation_steps: 2
+early_stopping_patience: 15
 ```
 
-The interactive CLI will prompt for tokenizer type (Legacy/REMI), architecture (LSTM/Transformer), training data directory, and model name.
+CLI arguments (`--input-dir`, `--output-dir`, `--wandb`, `--epochs`) override YAML values. Environment variables (`INPUT_DIR`, `OUTPUT_DIR`, `MAESTRO_DIR`) are used as fallbacks.
 
 ## Known Issues
 

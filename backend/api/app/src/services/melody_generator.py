@@ -71,7 +71,7 @@ def _load_pytorch_model(model_path, metadata_path, seeds_path):
     Returns:
         tuple: (model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer)
     """
-    checkpoint = torch.load(model_path, map_location="cpu", weights_only=True)
+    checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
     n_vocab = checkpoint["n_vocab"]
     lstm_units = checkpoint.get("lstm_units", [512, 512, 512])
     dense_units = checkpoint.get("dense_units", 256)

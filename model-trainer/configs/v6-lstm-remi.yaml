@@ -1,0 +1,24 @@
+name: melody_generator_lstm_v6
+architecture: lstm
+
+# Tokenization
+tokenizer: remi
+
+# Data
+input_dir: /app/input
+output_dir: /app/model
+sequence_length: 100
+stride: 1
+
+# Model
+embedding_dim: 128
+use_attention: false
+
+# Training
+epochs: 100
+batch_size: 256
+learning_rate: 4e-3
+weight_decay: 0.01
+grad_clip_max_norm: 1.0
+validation_split: 0.1
+early_stopping_patience: 10

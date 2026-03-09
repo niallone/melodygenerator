@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "midi-ai-model-trainer"
-version = "1.0.0"
-description = "PyTorch LSTM model trainer for AI melody generation"
+version = "2.0.0"
+description = "Config-driven PyTorch model trainer for AI melody generation"
 requires-python = ">=3.11"
 dependencies = [
     "torch>=2.5.0",
@@ -13,6 +13,8 @@ dependencies = [
     "numpy>=1.26.0",
     "miditok>=3.0",
     "symusic>=0.5.0",
+    "wandb>=0.16.0",
+    "pyyaml>=6.0",
 ]
 
 [project.optional-dependencies]
