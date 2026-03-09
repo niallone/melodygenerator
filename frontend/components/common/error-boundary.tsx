@@ -28,11 +28,11 @@ class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[200px] p-8 text-center">
-          <h2 className="text-xl font-semibold mb-4 text-text-primary dark:text-dark-text-primary">Something went wrong.</h2>
-          <p className="text-text-secondary dark:text-dark-text-secondary mb-4">An unexpected error occurred. Please try refreshing the page.</p>
+          <h2 className="text-xl font-semibold mb-4 text-white">Something went wrong.</h2>
+          <p className="text-white/50 mb-4">An unexpected error occurred. Please try refreshing the page.</p>
           <button
             onClick={() => this.setState({ hasError: false })}
-            className="px-4 py-2 bg-primary text-white rounded-lg cursor-pointer hover:bg-primary-dark transition-colors"
+            className="px-4 py-2 bg-indigo-500 text-white rounded-lg cursor-pointer hover:bg-indigo-600 transition-colors"
           >
             Try Again
           </button>

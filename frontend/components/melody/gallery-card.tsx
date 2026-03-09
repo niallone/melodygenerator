@@ -33,17 +33,17 @@ export default function GalleryCard({ melody, isActive, onPlay }: GalleryCardPro
     <Card className="flex flex-col gap-3 p-4">
       <div className="flex justify-between items-start">
         <div>
-          <p className="font-medium text-sm text-text-primary dark:text-dark-text-primary">{melody.instrument_name || 'Piano'}</p>
-          <p className="text-xs text-text-secondary dark:text-dark-text-secondary">{melody.model_id}</p>
+          <p className="font-medium text-sm text-white">{melody.instrument_name || 'Piano'}</p>
+          <p className="text-xs text-white/50">{melody.model_id}</p>
         </div>
-        <span className="text-xs text-text-secondary dark:text-dark-text-secondary">{timeAgo(melody.created)}</span>
+        <span className="text-xs text-white/50">{timeAgo(melody.created)}</span>
       </div>
 
       <MelodyPlayer url={url} midiUrl={midiUrl} isActive={isActive} onPlay={onPlay} />
 
-      <div className="flex justify-between items-center text-xs text-text-secondary dark:text-dark-text-secondary">
+      <div className="flex justify-between items-center text-xs text-white/50">
         <span className="tabular-nums">temp {melody.temperature} / {melody.num_notes} notes</span>
-        <a href={url} download className="text-primary dark:text-primary-light hover:underline font-medium">
+        <a href={url} download className="text-indigo-400 hover:underline font-medium">
           Download
         </a>
       </div>

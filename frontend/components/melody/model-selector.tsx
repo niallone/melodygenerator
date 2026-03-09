@@ -10,16 +10,16 @@ interface ModelSelectorProps {
 
 export default function ModelSelector({ models, selectedModel, onSelectModel }: ModelSelectorProps) {
   if (models.length === 0) {
-    return <div className="mb-4 text-text-secondary dark:text-dark-text-secondary">No models available</div>;
+    return <div className="mb-4 text-white/50">No models available</div>;
   }
 
   return (
     <div className="mb-4">
-      <label className="block text-sm font-medium text-text-secondary dark:text-dark-text-secondary mb-1.5">Model</label>
+      <label className="block text-sm font-medium text-white/50 mb-1.5">Model</label>
       <select
         value={selectedModel}
         onChange={(e) => onSelectModel(e.target.value)}
-        className="w-full p-2.5 text-sm bg-surface dark:bg-dark-surface-elevated text-text-primary dark:text-dark-text-primary border border-border dark:border-dark-border rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary"
+        className="w-full p-2.5 text-sm bg-white/[0.02] text-white border border-white/[0.08] rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
       >
         <option value="">Select a model</option>
         {models.map((model) => (
