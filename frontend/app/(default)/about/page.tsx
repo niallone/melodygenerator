@@ -234,7 +234,7 @@ export default function About() {
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link
               href="/"
-              className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-white text-[#07060b] font-semibold text-sm hover:bg-white/90 transition-colors"
+              className="inline-flex items-center justify-center px-8 py-3 rounded-lg bg-white !text-black font-semibold text-sm hover:bg-white/90 transition-colors"
             >
               Open Studio
             </Link>

@@ -156,7 +156,7 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
   const isBusy = isGenerating || streaming.isStreaming;
 
   return (
-    <section className="mb-8" aria-label="Melody Generator">
+    <section className="mb-8 flex flex-col items-start gap-4" aria-label="Melody Generator">
       {state.isLoading ? (
         <div className="flex justify-center items-center h-[50px]">
           <LoadingSpinner />
@@ -176,7 +176,7 @@ export function MelodyGenerator({ onGenerated }: MelodyGeneratorProps) {
 
           <button
             onClick={() => dispatch({ type: 'SET_PARAM', key: 'showAdvanced', value: !state.showAdvanced })}
-            className="text-sm text-indigo-400 mb-4 cursor-pointer hover:underline font-medium transition-colors"
+            className="text-sm text-indigo-400 cursor-pointer hover:underline font-medium transition-colors"
             aria-expanded={state.showAdvanced}
           >
             {state.showAdvanced ? 'Hide' : 'Show'} Advanced Options
