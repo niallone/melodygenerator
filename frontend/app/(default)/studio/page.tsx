@@ -441,7 +441,7 @@ export default function StudioPage() {
             <span className="text-white/50 text-sm font-medium">Recent Generations</span>
             <Link
               href="/"
-              className="ml-auto text-xs bg-white text-[#07060b] px-3 py-1.5 rounded font-medium hover:bg-white/90 transition-colors"
+              className="ml-auto text-xs bg-white !text-black px-3 py-1.5 rounded font-medium hover:bg-white/90 transition-colors"
             >
               Generate New
             </Link>
@@ -500,7 +500,7 @@ export default function StudioPage() {
           <div className="mt-4 flex items-center gap-4 flex-wrap">
             <button
               onClick={togglePlay}
-              className="w-10 h-10 rounded-full bg-white text-[#07060b] flex items-center justify-center hover:bg-white/90 transition-colors"
+              className="w-10 h-10 rounded-full bg-white !text-black flex items-center justify-center hover:bg-white/90 transition-colors"
             >
               {playing ? (
                 <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
