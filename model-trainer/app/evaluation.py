@@ -1,5 +1,6 @@
 import gzip
 import math
+import struct
 from collections import Counter
 
 
@@ -12,7 +13,7 @@ def compute_repetition_scores(tokens: list[int]) -> dict:
     """Compute n-gram repetition ratios and compression ratio for a token sequence."""
     results = {}
 
-    for n in (4, 8):
+    for n in (2, 4, 8, 16):
         if len(tokens) < n:
             results[f"{n}gram_repetition"] = 0.0
             continue
@@ -22,7 +23,8 @@ def compute_repetition_scores(tokens: list[int]) -> dict:
         results[f"{n}gram_repetition"] = repeated / len(counts) if counts else 0.0
 
     # Compression ratio: lower = more repetitive
-    raw = bytes(t % 256 for t in tokens)
+    # Use struct.pack to preserve full token values (not lossy modulo)
+    raw = struct.pack(f">{len(tokens)}H", *[t & 0xFFFF for t in tokens])
     compressed = gzip.compress(raw)
     results["compression_ratio"] = len(compressed) / len(raw) if raw else 1.0
 
@@ -45,8 +47,8 @@ def analyze_pitch_distribution(tokens: list[int], tokenizer=None) -> dict:
                 for note in track.notes:
                     pitches.append(note.pitch)
         except Exception:
-            # Fall back to treating tokens as pitches
-            pitches = [t for t in tokens if 21 <= t <= 108]
+            # REMI tokens are not raw MIDI pitches; can't fall back meaningfully
+            pass
     else:
         pitches = [t for t in tokens if 21 <= t <= 108]
 

@@ -1,4 +1,6 @@
+import json
 import math
+import os
 
 
 class ExperimentTracker:
@@ -7,6 +9,7 @@ class ExperimentTracker:
     def __init__(self, project: str, config: dict, run_name: str | None = None, enabled: bool = True):
         self._enabled = enabled
         self._run = None
+        self._config = config
 
         if not enabled:
             return
@@ -35,6 +38,13 @@ class ExperimentTracker:
             metrics["perplexity"] = perplexity
         wandb.log(metrics, step=epoch)
 
+    def log_batch(self, step: int, loss: float, grad_norm: float):
+        """Log per-batch metrics (loss, gradient norm)."""
+        if not self._enabled:
+            return
+        import wandb
+        wandb.log({"batch/loss": loss, "batch/grad_norm": grad_norm}, step=step)
+
     def log_model_summary(self, param_count: int, architecture: str):
         if not self._enabled:
             return
@@ -46,6 +56,13 @@ class ExperimentTracker:
             return
         import wandb
         wandb.log({"eval/" + k: v for k, v in metrics.items()})
+
+    def save_config_locally(self, output_dir: str):
+        """Save a local copy of the training config for reproducibility."""
+        path = os.path.join(output_dir, "train_config.json")
+        with open(path, "w") as f:
+            json.dump(self._config, f, indent=2)
+        print(f"Config saved to {path}")
 
     def finish(self):
         if not self._enabled or self._run is None:

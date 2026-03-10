@@ -75,7 +75,7 @@ class RoPEMultiHeadAttention(nn.Module):
         self.dropout = nn.Dropout(dropout)
         self.rope = RotaryPositionEmbedding(self.d_head, max_seq_len)
 
-    def forward(self, x, causal_mask=True):
+    def forward(self, x, causal_mask=True, kv_cache=None, start_pos=0):
         batch, seq_len, _ = x.shape
 
         qkv = self.qkv_proj(x)
@@ -83,14 +83,24 @@ class RoPEMultiHeadAttention(nn.Module):
         qkv = qkv.permute(2, 0, 3, 1, 4)
         q, k, v = qkv[0], qkv[1], qkv[2]
 
-        cos, sin = self.rope(seq_len)
+        cos, sin = self.rope(start_pos + seq_len)
+        cos = cos[start_pos:start_pos + seq_len]
+        sin = sin[start_pos:start_pos + seq_len]
         q, k = apply_rotary_pos_emb(q, k, cos, sin)
+
+        # KV cache for autoregressive generation
+        if kv_cache is not None:
+            cached_k, cached_v = kv_cache
+            k = torch.cat([cached_k, k], dim=2)
+            v = torch.cat([cached_v, v], dim=2)
+        new_kv_cache = (k, v)
 
         scale = math.sqrt(self.d_head)
         attn = torch.matmul(q, k.transpose(-2, -1)) / scale
 
         if causal_mask:
-            mask = torch.triu(torch.ones(seq_len, seq_len, device=x.device), diagonal=1).bool()
+            total_len = k.shape[2]
+            mask = torch.triu(torch.ones(seq_len, total_len, device=x.device), diagonal=1 + start_pos).bool()
             attn = attn.masked_fill(mask.unsqueeze(0).unsqueeze(0), float('-inf'))
 
         attn = F.softmax(attn, dim=-1)
@@ -98,7 +108,7 @@ class RoPEMultiHeadAttention(nn.Module):
 
         out = torch.matmul(attn, v)
         out = out.transpose(1, 2).reshape(batch, seq_len, self.d_model)
-        return self.out_proj(out)
+        return self.out_proj(out), new_kv_cache
 
 
 class SwiGLUFeedForward(nn.Module):
@@ -123,10 +133,11 @@ class TransformerBlock(nn.Module):
         self.norm2 = RMSNorm(d_model)
         self.ff = SwiGLUFeedForward(d_model, d_ff, dropout)
 
-    def forward(self, x):
-        x = x + self.attn(self.norm1(x))
+    def forward(self, x, kv_cache=None, start_pos=0):
+        attn_out, new_kv_cache = self.attn(self.norm1(x), kv_cache=kv_cache, start_pos=start_pos)
+        x = x + attn_out
         x = x + self.ff(self.norm2(x))
-        return x
+        return x, new_kv_cache
 
 
 class MusicTransformer(nn.Module):
@@ -170,9 +181,32 @@ class MusicTransformer(nn.Module):
         x = self.token_embedding(x)
         x = self.embed_dropout(x)
         for layer in self.layers:
-            x = layer(x)
+            x, _ = layer(x)
         x = self.ln_f(x)
         return self.output_proj(x)
+
+    @torch.no_grad()
+    def generate_step(self, token, kv_caches=None, start_pos=0):
+        """Single autoregressive step with KV cache.
+
+        Args:
+            token: (batch, 1) tensor of the latest token.
+            kv_caches: list of (k, v) tuples per layer, or None for first step.
+            start_pos: position index for RoPE.
+
+        Returns:
+            logits: (batch, vocab) logits for next token.
+            new_kv_caches: updated KV caches.
+        """
+        x = self.token_embedding(token)
+        new_kv_caches = []
+        for i, layer in enumerate(self.layers):
+            cache = kv_caches[i] if kv_caches is not None else None
+            x, new_cache = layer(x, kv_cache=cache, start_pos=start_pos)
+            new_kv_caches.append(new_cache)
+        x = self.ln_f(x)
+        logits = self.output_proj(x[:, -1, :])
+        return logits, new_kv_caches
 
     def count_parameters(self):
         return sum(p.numel() for p in self.parameters() if p.requires_grad)

@@ -11,6 +11,9 @@ output_dir: /app/model
 maestro_dir: /app/maestro
 sequence_length: 256
 stride: 64
+num_augmentations: 2
+augmentation_semitone_range: 6
+seed: 42
 
 # Model
 d_model: 512

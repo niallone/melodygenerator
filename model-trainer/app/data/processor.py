@@ -1,5 +1,6 @@
 """MIDI data pipeline: file discovery, tokenization, augmentation, sequence preparation."""
 
+import logging
 import os
 import random
 
@@ -8,6 +9,8 @@ from music21 import converter, note, chord
 
 from .augmentation import augment_remi, augment_legacy, _extract_token_ids
 from .tokenizer import create_remi_tokenizer, learn_bpe, save_tokenizer
+
+logger = logging.getLogger(__name__)
 
 
 class MIDIDataPipeline:
@@ -35,8 +38,8 @@ class MIDIDataPipeline:
             midi_files.extend(extra)
         print(f"Total MIDI files: {len(midi_files)}")
 
-        if not midi_files:
-            raise ValueError("No MIDI files found.")
+        if len(midi_files) < 2:
+            raise ValueError(f"Need at least 2 MIDI files for train/val split, found {len(midi_files)}.")
 
         # Create tokenizer
         if self.tokenizer_type == "remi":
@@ -51,12 +54,17 @@ class MIDIDataPipeline:
         train_files = midi_files[val_size:]
         print(f"Train files: {len(train_files)}, Val files: {len(val_files)}")
 
+        aug_kwargs = {
+            "num_augmentations": config.num_augmentations,
+            "semitone_range": config.augmentation_semitone_range,
+        }
+
         # Tokenize + augment
         if self.tokenizer_type == "remi":
-            train_data = self._process_remi(train_files, augment=True)
+            train_data = self._process_remi(train_files, augment=True, **aug_kwargs)
             val_data = self._process_remi(val_files, augment=False)
         else:
-            train_data = self._process_legacy(train_files, augment=True)
+            train_data = self._process_legacy(train_files, augment=True, **aug_kwargs)
             val_data = self._process_legacy(val_files, augment=False)
 
         # Prepare sequences from training data
@@ -71,11 +79,20 @@ class MIDIDataPipeline:
         if self.tokenizer is not None:
             save_tokenizer(self.tokenizer, path)
 
-    def _process_remi(self, midi_files: list[str], augment: bool = True) -> list[int]:
+    def _process_remi(
+        self,
+        midi_files: list[str],
+        augment: bool = True,
+        num_augmentations: int = 2,
+        semitone_range: int = 6,
+    ) -> list[int]:
         """Tokenize MIDI files with REMI, with optional pitch-shift augmentation."""
         from symusic import Score as SymScore
 
         all_tokens = []
+        success_count = 0
+        fail_count = 0
+
         for midi_path in midi_files:
             try:
                 score = SymScore(midi_path)
@@ -83,18 +100,38 @@ class MIDIDataPipeline:
                 all_tokens.extend(_extract_token_ids(tokens))
 
                 if augment:
-                    all_tokens.extend(augment_remi(score, self.tokenizer))
+                    all_tokens.extend(
+                        augment_remi(score, self.tokenizer, num_augmentations, semitone_range)
+                    )
+                success_count += 1
             except Exception as e:
-                print(f"Error processing {midi_path}: {e}")
+                fail_count += 1
+                logger.warning("Failed to process %s: %s", midi_path, e)
 
+        print(f"REMI processing: {success_count} succeeded, {fail_count} failed out of {len(midi_files)} files")
         print(f"Total REMI tokens: {len(all_tokens)}")
+
+        if fail_count > success_count:
+            raise ValueError(
+                f"More than half of MIDI files failed ({fail_count}/{success_count + fail_count}). "
+                "Check your input data."
+            )
         if not all_tokens:
             raise ValueError("No tokens extracted from MIDI files.")
         return all_tokens
 
-    def _process_legacy(self, midi_files: list[str], augment: bool = True) -> list[str]:
+    def _process_legacy(
+        self,
+        midi_files: list[str],
+        augment: bool = True,
+        num_augmentations: int = 2,
+        semitone_range: int = 6,
+    ) -> list[str]:
         """Extract pitch strings using music21."""
         notes = []
+        success_count = 0
+        fail_count = 0
+
         for midi_path in midi_files:
             try:
                 midi = converter.parse(midi_path)
@@ -103,15 +140,24 @@ class MIDIDataPipeline:
                         notes.append(str(element.pitch))
                     elif isinstance(element, chord.Chord):
                         notes.append(".".join(str(n) for n in element.normalOrder))
+                success_count += 1
             except Exception as e:
-                print(f"Error processing {midi_path}: {e}")
+                fail_count += 1
+                logger.warning("Failed to process %s: %s", midi_path, e)
 
+        print(f"Legacy processing: {success_count} succeeded, {fail_count} failed out of {len(midi_files)} files")
         print(f"Total notes: {len(notes)}")
+
+        if fail_count > success_count:
+            raise ValueError(
+                f"More than half of MIDI files failed ({fail_count}/{success_count + fail_count}). "
+                "Check your input data."
+            )
         if not notes:
             raise ValueError("No notes extracted.")
 
         if augment:
-            notes = augment_legacy(notes)
+            notes = augment_legacy(notes, num_augmentations, semitone_range)
             print(f"Total notes after augmentation: {len(notes)}")
         return notes
 

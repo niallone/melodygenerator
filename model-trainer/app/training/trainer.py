@@ -1,5 +1,6 @@
 """Unified trainer for both LSTM and Transformer architectures."""
 
+import glob
 import json
 import os
 import random
@@ -46,7 +47,7 @@ class Trainer:
             experiment_tracker: optional ExperimentTracker instance.
         """
         cfg = self.config
-        set_seed(42)
+        set_seed(cfg.seed)
 
         print(f"Training {cfg.architecture} | epochs={cfg.epochs} batch={cfg.batch_size}")
         param_count = sum(p.numel() for p in self.model.parameters() if p.requires_grad)
@@ -78,7 +79,7 @@ class Trainer:
             # --- Training ---
             train_loss, global_step = self._train_epoch(
                 train_loader, criterion, optimizer, scheduler,
-                use_bf16, global_step,
+                use_bf16, global_step, experiment_tracker,
             )
 
             # --- Validation ---
@@ -107,6 +108,7 @@ class Trainer:
                     f"weights-improvement-{epoch + 1:02d}-{val_loss:.4f}.pt",
                 )
                 self._save_checkpoint(ckpt_path)
+                self._cleanup_checkpoints(cfg.output_dir, cfg.max_checkpoints)
                 print(f"Checkpoint saved: {ckpt_path}")
             else:
                 patience_counter += 1
@@ -178,7 +180,7 @@ class Trainer:
     # Training + validation loops
     # ------------------------------------------------------------------
 
-    def _train_epoch(self, train_loader, criterion, optimizer, scheduler, use_bf16, global_step):
+    def _train_epoch(self, train_loader, criterion, optimizer, scheduler, use_bf16, global_step, experiment_tracker=None):
         """Run one training epoch. Returns (avg_loss, global_step)."""
         cfg = self.config
         self.model.train()
@@ -195,11 +197,14 @@ class Trainer:
                 loss.backward()
 
                 if (batch_idx + 1) % cfg.accumulation_steps == 0:
-                    torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=cfg.grad_clip_max_norm)
+                    grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=cfg.grad_clip_max_norm)
                     optimizer.step()
                     scheduler.step()
                     optimizer.zero_grad()
                     global_step += 1
+
+                    if experiment_tracker:
+                        experiment_tracker.log_batch(global_step, loss.item() * cfg.accumulation_steps, grad_norm.item())
 
                 total_loss += loss.item() * cfg.accumulation_steps
             else:
@@ -207,9 +212,12 @@ class Trainer:
                 outputs = self.model(batch_x)
                 loss = criterion(outputs, batch_y)
                 loss.backward()
-                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=cfg.grad_clip_max_norm)
+                grad_norm = torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=cfg.grad_clip_max_norm)
                 optimizer.step()
                 total_loss += loss.item()
+
+                if experiment_tracker and (batch_idx + 1) % 100 == 0:
+                    experiment_tracker.log_batch(global_step + batch_idx, loss.item(), grad_norm.item())
 
             num_batches += 1
 
@@ -251,6 +259,15 @@ class Trainer:
     # ------------------------------------------------------------------
     # Saving
     # ------------------------------------------------------------------
+
+    def _cleanup_checkpoints(self, output_dir: str, max_checkpoints: int):
+        """Remove old improvement checkpoints, keeping only the most recent."""
+        pattern = os.path.join(output_dir, "weights-improvement-*.pt")
+        checkpoints = sorted(glob.glob(pattern), key=os.path.getmtime)
+        while len(checkpoints) > max_checkpoints:
+            old = checkpoints.pop(0)
+            os.remove(old)
+            print(f"Removed old checkpoint: {old}")
 
     def _save_checkpoint(self, path: str):
         """Save model checkpoint in the appropriate format."""

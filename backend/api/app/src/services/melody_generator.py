@@ -288,25 +288,62 @@ def _generate_notes_transformer_sync(
     model, seeds, n_vocab, num_notes=500, temperature=0.8, top_k=50, top_p=0.95, max_seq_len=512
 ):
     """
-    Autoregressive generation with a Transformer model.
+    Autoregressive generation with a Transformer model using KV cache.
     """
     start = np.random.randint(0, len(seeds))
     sequence = list(np.array(seeds[start], dtype=np.int64).flatten())
+    seed_len = len(sequence)
 
     model.eval()
     with torch.no_grad():
-        for _ in range(num_notes):
-            # Truncate to max_seq_len
+        # Check if model supports KV cache generation
+        if hasattr(model, 'generate_step'):
+            # Prefill: run the full seed through the model to build KV cache
             input_seq = sequence[-max_seq_len:]
             input_tensor = torch.LongTensor([input_seq])
             logits = model(input_tensor)
-            # Take logits at the last position
             next_logits = logits[0, -1, :]
             index = _sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
             sequence.append(index)
 
+            # Build KV cache from prefill
+            x = model.token_embedding(input_tensor)
+            kv_caches = []
+            for layer in model.layers:
+                x, cache = layer(x)
+                kv_caches.append(cache)
+
+            # Incremental generation with KV cache
+            pos = len(input_seq)
+            for _ in range(num_notes - 1):
+                token = torch.LongTensor([[sequence[-1]]])
+                next_logits, kv_caches = model.generate_step(token, kv_caches, start_pos=pos)
+                index = _sample_with_top_k_top_p(next_logits[0], temperature=temperature, top_k=top_k, top_p=top_p)
+                sequence.append(index)
+                pos += 1
+
+                # Reset cache if we exceed max_seq_len to avoid memory issues
+                if pos >= max_seq_len:
+                    input_seq = sequence[-max_seq_len:]
+                    input_tensor = torch.LongTensor([input_seq])
+                    x = model.token_embedding(input_tensor)
+                    kv_caches = []
+                    for layer in model.layers:
+                        x, cache = layer(x)
+                        kv_caches.append(cache)
+                    pos = len(input_seq)
+        else:
+            # Fallback: full forward pass per token
+            for _ in range(num_notes):
+                input_seq = sequence[-max_seq_len:]
+                input_tensor = torch.LongTensor([input_seq])
+                logits = model(input_tensor)
+                next_logits = logits[0, -1, :]
+                index = _sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
+                sequence.append(index)
+
     # Return only the generated portion
-    return sequence[len(np.array(seeds[start]).flatten()) :]
+    return sequence[seed_len:]
 
 
 def _create_midi_sync(prediction_output, filename, midi_program=0):
