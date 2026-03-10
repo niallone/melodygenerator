@@ -52,7 +52,13 @@ export default function About() {
           </div>
           <div className="sm:col-span-8 space-y-6 text-white/50 text-lg font-light leading-relaxed">
             <p>
-              Consumer AI music tools like Suno and Udio generate finished audio waveforms &mdash; complete songs you can listen to but not easily edit. This project works at a different level: generating symbolic MIDI sequences that musicians can pull apart, transpose, rearrange, and build on in a DAW. Individual notes, timing, velocity &mdash; preserved in a format that&apos;s both human-readable and machine-processable.
+              Tools like <strong className="text-white/80">Suno</strong> and <strong className="text-white/80">Udio</strong> generate finished audio &mdash; a complete waveform, like a rendered image. You can listen to it, but you can&apos;t reach in and move a note, change a chord, or rewrite the bridge. The audio is the final product.
+            </p>
+            <p>
+              This project generates <strong className="text-white/80">symbolic music</strong> &mdash; MIDI sequences where every note is a discrete event with a pitch, a start time, a duration, and a velocity. Think of it as the difference between a photograph of a painting and the painting&apos;s layers in Photoshop. You can select individual notes, transpose sections, swap instruments, adjust timing, and drop the output straight into a DAW like Ableton or Logic as a starting point for real composition.
+            </p>
+            <p>
+              The model doesn&apos;t know what music <em>sounds</em> like. It has never heard audio. It learns structure &mdash; which notes tend to follow which, how phrases build, where tension resolves &mdash; entirely from the symbolic representation. The audio you hear on this site is just a MIDI-to-WAV render of what the model actually outputs: a sequence of tokens.
             </p>
             <p>
               Built on research from the{' '}
