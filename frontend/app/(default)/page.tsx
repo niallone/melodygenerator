@@ -35,7 +35,7 @@ export default function Home() {
             </span>
           </h1>
           <p className="text-xl text-white/50 max-w-lg font-light leading-relaxed mb-10">
-            Exploring neural sequence generation applied to symbolic music &mdash; from LSTMs to Transformers across seven model versions.
+            Exploring neural sequence generation applied to symbolic music &mdash; from LSTMs to Transformers across eight model versions.
           </p>
           <Link
             href="/about"

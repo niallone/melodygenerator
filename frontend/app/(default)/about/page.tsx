@@ -52,7 +52,7 @@ export default function About() {
           </div>
           <div className="sm:col-span-8 space-y-6 text-white/50 text-lg font-light leading-relaxed">
             <p>
-              Consumer AI music tools generate audio directly from text prompts. This project works at a different level: generating symbolic MIDI sequences that musicians can edit, transpose, and arrange in a DAW. Individual notes, timing, velocity &mdash; preserved in a format that&apos;s both human-readable and machine-processable.
+              Consumer AI music tools like Suno and Udio generate finished audio waveforms &mdash; complete songs you can listen to but not easily edit. This project works at a different level: generating symbolic MIDI sequences that musicians can pull apart, transpose, rearrange, and build on in a DAW. Individual notes, timing, velocity &mdash; preserved in a format that&apos;s both human-readable and machine-processable.
             </p>
             <p>
               Built on research from the{' '}
@@ -78,6 +78,10 @@ export default function About() {
           </h2>
           <p className="text-white/50 max-w-xl text-lg font-light mb-16">
             The single biggest impact on generation quality. Three strategies, each building on the last.
+          </p>
+
+          <p className="text-sm text-white/30 mb-8 italic">
+            V1 was the first experiment &mdash; a simple proof of concept that&apos;s since been lost. Everything here starts from V2.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden">
