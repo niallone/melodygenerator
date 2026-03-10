@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [master]
+    branches: [main]
   pull_request:
-    branches: [master]
+    branches: [main]
 
 jobs:
   backend-tests:
@@ -84,3 +84,14 @@ jobs:
         run: docker build -f backend/api/Dockerfile .
       - name: Build frontend image
         run: docker build ./frontend
+
+  deploy:
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    needs: [backend-tests, backend-lint, frontend-lint, frontend-tests, docker-build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Coolify deploy
+        run: |
+          curl -f -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
+            -H "Accept: application/json" \
+            --max-time 30

@@ -6,6 +6,7 @@ services:
         NEXT_PUBLIC_API_URL: https://api.melodygenerator.fun
     environment:
       - NEXT_PUBLIC_API_URL=https://api.melodygenerator.fun
+      - HOSTNAME=0.0.0.0
       - TZ=Australia/Brisbane
     labels:
       - traefik.enable=true
@@ -22,7 +23,7 @@ services:
     networks:
       - melodygenerator-net
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3000"]
+      test: ["CMD", "wget", "--spider", "-q", "http://127.0.0.1:3000"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -41,7 +42,7 @@ services:
       dockerfile: backend/api/Dockerfile
     volumes:
       - "./backend/api/app/output:/usr/src/api/app/output"
-      - "./models:/usr/src/api/app/model"
+      - "/opt/melodygenerator/models:/usr/src/api/app/model:ro"
     labels:
       - traefik.enable=true
       - traefik.http.routers.mg-api.rule=Host(`api.melodygenerator.fun`)
