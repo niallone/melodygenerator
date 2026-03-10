@@ -92,6 +92,6 @@ jobs:
     steps:
       - name: Trigger Coolify deploy
         run: |
-          curl -f -X GET "${{ secrets.COOLIFY_WEBHOOK_URL }}" \
-            -H "Accept: application/json" \
+          curl -f -X POST "https://foundry.niall.one/api/v1/applications/bocgs40gkwwkgwoskw4gckkg/restart" \
+            -H "Authorization: Bearer ${{ secrets.COOLIFY_API_KEY }}" \
             --max-time 30
