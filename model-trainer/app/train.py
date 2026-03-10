@@ -15,6 +15,7 @@ sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from app.config import load_config
 from app.data import MIDIDataPipeline
 from app.training import Trainer
+from app.training.trainer import set_seed
 from app.utils import setup_gpu
 
 
@@ -27,6 +28,9 @@ async def main():
     print(f"Output: {config.output_dir}")
     if config.maestro_dir:
         print(f"MAESTRO: {config.maestro_dir}")
+
+    # Seed before data pipeline for reproducible train/val splits
+    set_seed(config.seed)
 
     # --- Data pipeline ---
     pipeline = MIDIDataPipeline(tokenizer_type=config.tokenizer)
@@ -71,9 +75,11 @@ async def main():
                 "batch_size": config.batch_size,
                 "learning_rate": config.learning_rate,
                 "sequence_length": config.sequence_length,
+                "seed": config.seed,
                 "n_vocab": n_vocab,
             },
         )
+        tracker.save_config_locally(config.output_dir)
 
     # --- Train ---
     trainer = Trainer(model, config, device=device)

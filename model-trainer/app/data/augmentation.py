@@ -5,11 +5,11 @@ import random
 from music21 import interval, pitch
 
 
-def augment_remi(score, tokenizer, num_augmentations: int = 2) -> list[int]:
+def augment_remi(score, tokenizer, num_augmentations: int = 2, semitone_range: int = 6) -> list[int]:
     """Pitch-shift a symusic Score and return augmented REMI tokens."""
     tokens = []
     for _ in range(num_augmentations):
-        semitones = random.randint(-6, 6)
+        semitones = random.randint(-semitone_range, semitone_range)
         if semitones == 0:
             continue
         shifted = score.shift_pitch(semitones)
@@ -18,11 +18,11 @@ def augment_remi(score, tokenizer, num_augmentations: int = 2) -> list[int]:
     return tokens
 
 
-def augment_legacy(notes: list[str], num_augmentations: int = 2) -> list[str]:
+def augment_legacy(notes: list[str], num_augmentations: int = 2, semitone_range: int = 6) -> list[str]:
     """Transpose pitch strings by random intervals."""
     augmented = [notes]
     for _ in range(num_augmentations):
-        transposition = random.randint(-6, 6)
+        transposition = random.randint(-semitone_range, semitone_range)
         transposed = []
         for note_str in notes:
             if "." in note_str:
