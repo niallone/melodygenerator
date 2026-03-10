@@ -8,6 +8,8 @@ services:
       - NEXT_PUBLIC_API_URL=https://api.melodygenerator.fun
       - HOSTNAME=0.0.0.0
       - TZ=Australia/Brisbane
+    labels:
+      - traefik.http.services.http-0-bocgs40gkwwkgwoskw4gckkg-frontend.loadbalancer.server.port=3000
     networks:
       - melodygenerator-net
     healthcheck:
@@ -31,6 +33,8 @@ services:
     volumes:
       - "./backend/api/app/output:/usr/src/api/app/output"
       - "/opt/melodygenerator/models:/usr/src/api/app/model:ro"
+    labels:
+      - traefik.http.services.http-0-bocgs40gkwwkgwoskw4gckkg-api.loadbalancer.server.port=4050
     environment:
       TZ: Australia/Brisbane
       API_URL: https://api.melodygenerator.fun
