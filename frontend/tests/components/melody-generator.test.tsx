@@ -50,7 +50,7 @@ describe('MelodyGenerator', () => {
     const loadingContainer = container.querySelector('.flex.justify-center.items-center');
     expect(loadingContainer).toBeInTheDocument();
 
-    const spinner = container.querySelector('.animate-smooth-spin');
+    const spinner = container.querySelector('.animate-spin');
     expect(spinner).toBeInTheDocument();
   });
 
