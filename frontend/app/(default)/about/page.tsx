@@ -35,7 +35,7 @@ export default function About() {
             parameters
           </h1>
           <p className="text-xl text-white/50 max-w-2xl font-light leading-relaxed">
-            An exploration of neural sequence generation applied to symbolic music &mdash; evolving over the past few years from simple LSTM baselines to a Transformer architecture with BPE tokenisation.
+            An exploration of neural sequence generation applied to symbolic music. Evolving over the past few years from simple LSTM baselines to a Transformer architecture with BPE tokenisation.
           </p>
         </div>
       </section>
@@ -52,20 +52,20 @@ export default function About() {
           </div>
           <div className="sm:col-span-8 space-y-6 text-white/50 text-lg font-light leading-relaxed">
             <p>
-              Tools like <strong className="text-white/80">Suno</strong> and <strong className="text-white/80">Udio</strong> generate finished audio &mdash; a complete waveform, like a rendered image. You can listen to it, but you can&apos;t reach in and move a note, change a chord, or rewrite the bridge. The audio is the final product.
+              Tools like <strong className="text-white/80">Suno</strong> and <strong className="text-white/80">Udio</strong> generate finished audio: a complete waveform, like a rendered image. You can listen to it, but you can&apos;t reach in and move a note, change a chord, or rewrite the bridge. The audio is the final product.
             </p>
             <p>
-              This project generates <strong className="text-white/80">symbolic music</strong> &mdash; MIDI sequences where every note is a discrete event with a pitch, a start time, a duration, and a velocity. Think of it as the difference between a photograph of a painting and the painting&apos;s layers in Photoshop. You can select individual notes, transpose sections, swap instruments, adjust timing, and drop the output straight into a DAW like Ableton or Logic as a starting point for real composition.
+              This project generates <strong className="text-white/80">symbolic music</strong>: MIDI sequences where every note is a discrete event with a pitch, a start time, a duration, and a velocity. Think of it as the difference between a photograph of a painting and the painting&apos;s layers in Photoshop. You can select individual notes, transpose sections, swap instruments, adjust timing, and drop the output straight into a DAW like Ableton or Logic as a starting point for real composition.
             </p>
             <p>
-              The model doesn&apos;t know what music <em>sounds</em> like. It has never heard audio. It learns structure &mdash; which notes tend to follow which, how phrases build, where tension resolves &mdash; entirely from the symbolic representation. The audio you hear on this site is just a MIDI-to-WAV render of what the model actually outputs: a sequence of tokens.
+              The model doesn&apos;t know what music <em>sounds</em> like. It has never heard audio. It learns structure (which notes tend to follow which, how phrases build, where tension resolves) entirely from the symbolic representation. The audio you hear on this site is just a MIDI-to-WAV render of what the model actually outputs: a sequence of tokens.
             </p>
             <p>
               Built on research from the{' '}
               <ExtLink href="https://arxiv.org/abs/1809.04281">Music Transformer</ExtLink> (Huang et al., 2019),
               the <ExtLink href="https://arxiv.org/abs/2002.00212">Pop Music Transformer</ExtLink> (Huang &amp; Yang, 2020) which introduced REMI tokenisation,
               and <ExtLink href="https://arxiv.org/abs/2301.11975">Fradet et al. (2023)</ExtLink> on BPE compression for symbolic music.
-              V8 trains on the <ExtLink href="https://arxiv.org/abs/1810.12247">MAESTRO dataset</ExtLink> &mdash; 1,276 competition piano performances.
+              V8 trains on the <ExtLink href="https://arxiv.org/abs/1810.12247">MAESTRO dataset</ExtLink>: 1,276 competition piano performances.
             </p>
           </div>
         </div>
@@ -87,7 +87,7 @@ export default function About() {
           </p>
 
           <p className="text-sm text-white/30 mb-8 italic">
-            V1 was the first experiment &mdash; a simple proof of concept that&apos;s since been lost. Everything here starts from V2.
+            V1 was the first experiment, a simple proof of concept that&apos;s since been lost. Everything here starts from V2.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden">

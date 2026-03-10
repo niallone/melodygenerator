@@ -27,8 +27,10 @@ COPY backend/api/wsgi.py .
 # Install Python dependencies (use CPU-only PyTorch for smaller image)
 RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .
 
-# Create non-root user
-RUN useradd -m appuser
+# Create non-root user and output directory
+RUN useradd -m appuser && \
+    mkdir -p /usr/src/api/app/output && \
+    chown appuser:appuser /usr/src/api/app/output
 USER appuser
 
 # Expose port
