@@ -80,7 +80,7 @@ describe('createStreamingConnection', () => {
     createStreamingConnection({});
 
     expect(mockInstances).toHaveLength(1);
-    expect(mockInstances[0].url).toBe('ws://localhost:4050/melody/generate/stream');
+    expect(mockInstances[0].url).toBe('wss://api.melodygenerator.fun/melody/generate/stream');
   });
 
   it('dispatches generation_started to onStarted callback', async () => {

@@ -22,7 +22,7 @@ describe('fetchModels', () => {
     const { fetchModels } = await loadApi();
     await fetchModels();
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:4050/melody/models');
+    expect(fetchMock).toHaveBeenCalledWith('https://api.melodygenerator.fun/melody/models');
   });
 });
 
@@ -36,7 +36,7 @@ describe('fetchInstruments', () => {
     const { fetchInstruments } = await loadApi();
     await fetchInstruments();
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:4050/melody/instruments');
+    expect(fetchMock).toHaveBeenCalledWith('https://api.melodygenerator.fun/melody/instruments');
   });
 });
 
@@ -59,7 +59,7 @@ describe('generateMelody', () => {
       num_notes: 200,
     });
 
-    expect(fetchMock).toHaveBeenCalledWith('http://localhost:4050/melody/generate', {
+    expect(fetchMock).toHaveBeenCalledWith('https://api.melodygenerator.fun/melody/generate', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -85,6 +85,6 @@ describe('getDownloadUrl', () => {
     const { getDownloadUrl } = await loadApi();
     const url = getDownloadUrl('melody_123.wav');
 
-    expect(url).toBe('http://localhost:4050/melody/download/melody_123.wav');
+    expect(url).toBe('https://api.melodygenerator.fun/melody/download/melody_123.wav');
   });
 });

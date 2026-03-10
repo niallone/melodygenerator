@@ -297,7 +297,7 @@ def _generate_notes_transformer_sync(
     model.eval()
     with torch.no_grad():
         # Check if model supports KV cache generation
-        if hasattr(model, 'generate_step'):
+        if hasattr(model, "generate_step"):
             # Prefill: run the full seed through the model to build KV cache
             input_seq = sequence[-max_seq_len:]
             input_tensor = torch.LongTensor([input_seq])
