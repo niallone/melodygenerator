@@ -1,8 +1,8 @@
 import type { GenerationOptions, Melody, GalleryResponse } from '../types';
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4050';
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'https://api.melodygenerator.fun';
 
-export const WS_URL = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:4050')
+export const WS_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://api.melodygenerator.fun')
   .replace('http://', 'ws://')
   .replace('https://', 'wss://');
 
