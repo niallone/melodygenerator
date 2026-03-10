@@ -8,18 +8,6 @@ services:
       - NEXT_PUBLIC_API_URL=https://api.melodygenerator.fun
       - HOSTNAME=0.0.0.0
       - TZ=Australia/Brisbane
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.mg-frontend.rule=Host(`melodygenerator.fun`)
-      - traefik.http.routers.mg-frontend.entryPoints=https
-      - traefik.http.routers.mg-frontend.tls=true
-      - traefik.http.routers.mg-frontend.tls.certresolver=letsencrypt
-      - traefik.http.routers.mg-frontend.service=mg-frontend
-      - traefik.http.routers.mg-frontend-http.rule=Host(`melodygenerator.fun`)
-      - traefik.http.routers.mg-frontend-http.entryPoints=http
-      - traefik.http.routers.mg-frontend-http.middlewares=mg-redirect-https
-      - traefik.http.middlewares.mg-redirect-https.redirectscheme.scheme=https
-      - traefik.http.services.mg-frontend.loadbalancer.server.port=3000
     networks:
       - melodygenerator-net
     healthcheck:
@@ -43,17 +31,6 @@ services:
     volumes:
       - "./backend/api/app/output:/usr/src/api/app/output"
       - "/opt/melodygenerator/models:/usr/src/api/app/model:ro"
-    labels:
-      - traefik.enable=true
-      - traefik.http.routers.mg-api.rule=Host(`api.melodygenerator.fun`)
-      - traefik.http.routers.mg-api.entryPoints=https
-      - traefik.http.routers.mg-api.tls=true
-      - traefik.http.routers.mg-api.tls.certresolver=letsencrypt
-      - traefik.http.routers.mg-api.service=mg-api
-      - traefik.http.routers.mg-api-http.rule=Host(`api.melodygenerator.fun`)
-      - traefik.http.routers.mg-api-http.entryPoints=http
-      - traefik.http.routers.mg-api-http.middlewares=mg-redirect-https
-      - traefik.http.services.mg-api.loadbalancer.server.port=4050
     environment:
       TZ: Australia/Brisbane
       API_URL: https://api.melodygenerator.fun
