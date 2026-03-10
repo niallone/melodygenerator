@@ -40,15 +40,6 @@ export default function About() {
         </div>
       </section>
 
-      {/* ─── PULL QUOTE ─── */}
-      <section className="border-t border-white/[0.06] py-16 px-6 sm:px-10">
-        <div className="max-w-4xl mx-auto text-center">
-          <blockquote className="text-2xl sm:text-3xl font-light leading-relaxed text-white/60 italic">
-            &ldquo;Most research exists as static papers with cherry-picked audio samples. The goal here was to build a live, interactive system where each technique can be tested and compared in real time.&rdquo;
-          </blockquote>
-        </div>
-      </section>
-
       {/* ─── MOTIVATION ─── */}
       <section className="py-24 px-6 sm:px-10 border-t border-white/[0.06]">
         <div className="max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-12 gap-12">
