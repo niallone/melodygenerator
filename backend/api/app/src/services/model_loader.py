@@ -6,7 +6,6 @@ import logging
 import os
 
 import torch
-
 from shared.models import MelodyLSTM
 
 logger = logging.getLogger(__name__)

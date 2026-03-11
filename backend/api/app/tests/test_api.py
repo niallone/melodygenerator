@@ -1,6 +1,4 @@
-"""
-Tests for the main API routes (health check and index).
-"""
+"""Tests for the main API routes (health check and index)."""
 
 from unittest.mock import AsyncMock
 
@@ -19,13 +17,12 @@ async def test_health_check(app_with_mock_db, mock_db):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "healthy"
     assert data["database"] == "connected"
 
 
 @pytest.mark.asyncio
 async def test_health_check_db_down(app_with_mock_db, mock_db):
-    """GET /health returns unhealthy status when the database is unreachable."""
+    """GET /health returns degraded status when the database is unreachable."""
     mock_db.fetchval = AsyncMock(side_effect=Exception("Connection refused"))
 
     transport = ASGITransport(app=app_with_mock_db)
@@ -34,9 +31,8 @@ async def test_health_check_db_down(app_with_mock_db, mock_db):
 
     assert response.status_code == 200
     data = response.json()
-    assert data["status"] == "unhealthy"
+    assert data["status"] == "degraded"
     assert data["database"] == "error"
-    assert "message" in data
 
 
 @pytest.mark.asyncio

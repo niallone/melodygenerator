@@ -96,7 +96,6 @@ async def get_instruments():
     return INSTRUMENTS
 
 
-
 @router.get("/models")
 async def get_models_list(request: Request):
     try:
