@@ -10,7 +10,7 @@ from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.database.postgres.database import pg_db
-from app.src.config import Settings
+from app.src.dependencies import get_settings
 from app.src.errors.handlers import register_error_handlers
 from app.src.routes import router as routes_router
 from app.src.services.file_cleanup import cleanup_old_files
@@ -38,7 +38,7 @@ async def lifespan(app: FastAPI):
     # Startup
     app.state.pg_db = await pg_db.get_instance()
 
-    settings = Settings()
+    settings = app.state.settings
     logger.info("Preloading melody generation models")
     try:
         models = await get_available_models(settings.model_dir)
@@ -64,7 +64,7 @@ async def lifespan(app: FastAPI):
 
 def create_api() -> FastAPI:
     """Create and configure the FastAPI application."""
-    settings = Settings()
+    settings = get_settings()
 
     api = FastAPI(
         title="Melody Generator API",
