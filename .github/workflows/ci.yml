@@ -114,5 +114,9 @@ jobs:
               [ $i -eq 30 ] && echo "API health check failed" && exit 1
               sleep 2
             done
-            docker exec mg-frontend wget --spider -q http://127.0.0.1:3000 || exit 1
+            for i in $(seq 1 30); do
+              docker exec mg-frontend wget --spider -q http://127.0.0.1:3000 && break
+              [ $i -eq 30 ] && echo "Frontend health check failed" && exit 1
+              sleep 2
+            done
             echo "Deploy successful!"
