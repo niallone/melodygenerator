@@ -108,16 +108,13 @@ async def get_models_list(request: Request):
             request.app.state.models = models
 
         model_list = []
-        for model_id, model_data in models.items():
-            model_obj = model_data[0]
-            architecture = "transformer" if hasattr(model_obj, "d_model") else "lstm"
-            model_version = model_data[5] if len(model_data) > 5 else 1
+        for model_id, bundle in models.items():
             model_list.append(
                 {
                     "id": model_id,
                     "name": model_id,
-                    "architecture": architecture,
-                    "version": model_version,
+                    "architecture": bundle.architecture,
+                    "version": bundle.model_version,
                 }
             )
         return model_list
@@ -268,9 +265,9 @@ async def generate_melody_stream(websocket: WebSocket):
         midi_file = os.path.join(output_dir, f"generated_melody_{timestamp}.mid")
         wav_file = os.path.join(output_dir, f"generated_melody_{timestamp}.wav")
 
-        model_data = models[model_id]
-        tokenizer = model_data[6] if len(model_data) > 6 else None
-        loop = __import__("asyncio").get_event_loop()
+        bundle = models[model_id]
+        tokenizer = bundle.tokenizer
+        loop = asyncio.get_event_loop()
 
         if tokenizer and token_ids:
             await loop.run_in_executor(None, create_midi_from_tokens, token_ids, tokenizer, midi_file, midi_program)

@@ -15,13 +15,13 @@ from .midi_service import (
     midi_to_seed_sequence,
     token_to_note_event,
 )
-from .model_loader import get_available_models
+from .model_loader import ModelBundle, get_available_models
 from .sampling import sample_with_top_k_top_p
 
 logger = logging.getLogger(__name__)
 
 # Re-export for backward compatibility with api.py import
-__all__ = ["get_available_models", "generate_melody", "generate_melody_streaming"]
+__all__ = ["ModelBundle", "get_available_models", "generate_melody", "generate_melody_streaming"]
 
 
 def _generate_notes_sync(
@@ -170,70 +170,69 @@ async def generate_melody(
         logger.error(f"Invalid model ID: {model_id}")
         raise ValueError(f"Invalid model ID: {model_id}")
 
-    model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer = models[model_id]
+    bundle = models[model_id]
 
-    if seeds is None:
+    if bundle.seeds is None:
         raise ValueError(f"No seed sequences available for model {model_id}")
 
     loop = asyncio.get_event_loop()
-    architecture = "transformer" if hasattr(model, "d_model") else "lstm"
     generated_ids = None
     generated_notes = None
 
-    if architecture == "transformer":
-        max_seq_len = getattr(model, "max_seq_len", 512)
+    if bundle.architecture == "transformer":
+        max_seq_len = getattr(bundle.model, "max_seq_len", 512)
 
-        effective_seeds = seeds
-        if seed_midi and tokenizer:
-            seq_length = len(seeds[0]) if seeds else max_seq_len
-            seed_seq = await loop.run_in_executor(None, midi_to_seed_sequence, seed_midi, tokenizer, seq_length)
+        effective_seeds = bundle.seeds
+        if seed_midi and bundle.tokenizer:
+            seq_length = len(bundle.seeds[0]) if bundle.seeds else max_seq_len
+            seed_seq = await loop.run_in_executor(None, midi_to_seed_sequence, seed_midi, bundle.tokenizer, seq_length)
             effective_seeds = [seed_seq.tolist()]
 
         generated_ids = await loop.run_in_executor(
             None,
             _generate_notes_transformer_sync,
-            model,
+            bundle.model,
             effective_seeds,
-            n_vocab,
+            bundle.n_vocab,
             num_notes,
             temperature,
             top_k,
             top_p,
             max_seq_len,
         )
-    elif tokenizer is not None:
-        effective_seeds = seeds
+    elif bundle.tokenizer is not None:
+        effective_seeds = bundle.seeds
         if seed_midi:
-            seq_length = len(seeds[0]) if seeds else 100
-            seed_seq = await loop.run_in_executor(None, midi_to_seed_sequence, seed_midi, tokenizer, seq_length)
+            seq_length = len(bundle.seeds[0]) if bundle.seeds else 100
+            seed_seq = await loop.run_in_executor(None, midi_to_seed_sequence, seed_midi, bundle.tokenizer, seq_length)
             effective_seeds = [seed_seq.tolist()]
 
         generated_ids = await loop.run_in_executor(
             None,
             _generate_notes_remi_sync,
-            model,
+            bundle.model,
             effective_seeds,
-            tokenizer,
-            n_vocab,
+            bundle.tokenizer,
+            bundle.n_vocab,
             num_notes,
             temperature,
             top_k,
             top_p,
-            model_version,
+            bundle.model_version,
         )
     else:
         generated_notes = await loop.run_in_executor(
             None,
             _generate_notes_sync,
-            model,
-            seeds,
-            pitchnames,
-            n_vocab,
+            bundle.model,
+            bundle.seeds,
+            bundle.pitchnames,
+            bundle.n_vocab,
             num_notes,
             temperature,
             top_k,
             top_p,
-            model_version,
+            bundle.model_version,
         )
 
     if not os.path.exists(output_dir):
@@ -243,8 +242,10 @@ async def generate_melody(
     midi_file = os.path.join(output_dir, f"generated_melody_{timestamp}.mid")
     wav_file = os.path.join(output_dir, f"generated_melody_{timestamp}.wav")
 
-    if tokenizer is not None:
-        await loop.run_in_executor(None, create_midi_from_tokens, generated_ids, tokenizer, midi_file, midi_program)
+    if bundle.tokenizer is not None:
+        await loop.run_in_executor(
+            None, create_midi_from_tokens, generated_ids, bundle.tokenizer, midi_file, midi_program
+        )
     else:
         await loop.run_in_executor(None, create_midi_from_notes, generated_notes, midi_file, midi_program)
 
@@ -273,30 +274,28 @@ async def generate_melody_streaming(
     if model_id not in models:
         raise ValueError(f"Invalid model ID: {model_id}")
 
-    model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer = models[model_id]
+    bundle = models[model_id]
 
-    if seeds is None:
+    if bundle.seeds is None:
         raise ValueError(f"No seed sequences available for model {model_id}")
 
-    architecture = "transformer" if hasattr(model, "d_model") else "lstm"
+    if bundle.architecture == "transformer":
+        max_seq_len = getattr(bundle.model, "max_seq_len", 512)
+        start = np.random.randint(0, len(bundle.seeds))
+        sequence = list(np.array(bundle.seeds[start], dtype=np.int64).flatten())
 
-    if architecture == "transformer":
-        max_seq_len = getattr(model, "max_seq_len", 512)
-        start = np.random.randint(0, len(seeds))
-        sequence = list(np.array(seeds[start], dtype=np.int64).flatten())
-
-        model.eval()
+        bundle.model.eval()
         offset = 0.0
         with torch.no_grad():
             for i in range(num_notes):
                 input_seq = sequence[-max_seq_len:]
                 input_tensor = torch.LongTensor([input_seq])
-                logits = model(input_tensor)
+                logits = bundle.model(input_tensor)
                 next_logits = logits[0, -1, :]
                 index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
                 sequence.append(index)
 
-                note_event = token_to_note_event(index, tokenizer, i, offset)
+                note_event = token_to_note_event(index, bundle.tokenizer, i, offset)
                 if note_event:
                     offset = note_event.get("offset", offset) + note_event.get("duration", 0.5)
                     yield note_event
@@ -304,24 +303,24 @@ async def generate_melody_streaming(
                 if i % 10 == 0:
                     await asyncio.sleep(0)
 
-        yield {"type": "sequence_complete", "token_ids": sequence[len(np.array(seeds[start]).flatten()) :]}
+        yield {"type": "sequence_complete", "token_ids": sequence[len(np.array(bundle.seeds[start]).flatten()) :]}
 
-    elif tokenizer is not None:
-        start = np.random.randint(0, len(seeds))
-        pattern = np.array(seeds[start], dtype=np.int64).flatten()
+    elif bundle.tokenizer is not None:
+        start = np.random.randint(0, len(bundle.seeds))
+        pattern = np.array(bundle.seeds[start], dtype=np.int64).flatten()
         generated_ids = []
 
-        model.eval()
+        bundle.model.eval()
         offset = 0.0
         with torch.no_grad():
             for i in range(num_notes):
                 input_tensor = torch.LongTensor(pattern).unsqueeze(0)
-                logits = model(input_tensor)
+                logits = bundle.model(input_tensor)
                 index = sample_with_top_k_top_p(logits[0], temperature=temperature, top_k=top_k, top_p=top_p)
                 generated_ids.append(index)
                 pattern = np.append(pattern, index)[1:]
 
-                note_event = token_to_note_event(index, tokenizer, i, offset)
+                note_event = token_to_note_event(index, bundle.tokenizer, i, offset)
                 if note_event:
                     offset = note_event.get("offset", offset) + note_event.get("duration", 0.5)
                     yield note_event
@@ -332,15 +331,15 @@ async def generate_melody_streaming(
         yield {"type": "sequence_complete", "token_ids": generated_ids}
 
     else:
-        int_to_note = dict((number, note_name) for number, note_name in enumerate(pitchnames))
-        start = np.random.randint(0, len(seeds))
-        pattern = np.array(seeds[start])
+        int_to_note = dict((number, note_name) for number, note_name in enumerate(bundle.pitchnames))
+        start = np.random.randint(0, len(bundle.seeds))
+        pattern = np.array(bundle.seeds[start])
 
-        model.eval()
+        bundle.model.eval()
         offset = 0.0
         with torch.no_grad():
             for i in range(num_notes):
-                if model_version >= 2:
+                if bundle.model_version >= 2:
                     if pattern.ndim == 2:
                         pattern_flat = pattern[:, 0].astype(np.int64)
                     else:
@@ -348,10 +347,10 @@ async def generate_melody_streaming(
                     input_tensor = torch.LongTensor(pattern_flat).unsqueeze(0)
                 else:
                     prediction_input = np.reshape(pattern, (1, len(pattern), 1))
-                    prediction_input = prediction_input / float(n_vocab)
+                    prediction_input = prediction_input / float(bundle.n_vocab)
                     input_tensor = torch.FloatTensor(prediction_input)
 
-                logits = model(input_tensor)
+                logits = bundle.model(input_tensor)
                 index = sample_with_top_k_top_p(logits[0], temperature=temperature, top_k=top_k, top_p=top_p)
 
                 result = int_to_note[index]
@@ -375,7 +374,7 @@ async def generate_melody_streaming(
                 }
                 offset += 0.5
 
-                if model_version >= 2:
+                if bundle.model_version >= 2:
                     pattern = np.append(pattern, index)
                     pattern = pattern[1:]
                 else:
@@ -385,4 +384,4 @@ async def generate_melody_streaming(
                 if i % 10 == 0:
                     await asyncio.sleep(0)
 
-        yield {"type": "sequence_complete", "notes": [int_to_note[idx] for idx in range(len(pitchnames))]}
+        yield {"type": "sequence_complete", "notes": [int_to_note[idx] for idx in range(len(bundle.pitchnames))]}

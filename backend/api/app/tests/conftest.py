@@ -13,6 +13,7 @@ os.environ["DEBUG"] = "true"
 # Eagerly import create_api at module level so the heavy music21 dependency
 # loads during collection (no per-test timeout) rather than during fixture setup.
 from app.src.api import create_api  # noqa: E402
+from app.src.services.model_loader import ModelBundle  # noqa: E402
 
 
 @asynccontextmanager
@@ -76,13 +77,13 @@ def mock_models():
     del mock_model.d_model
 
     return {
-        "test_model": (
-            mock_model,  # model
-            [[0] * 100],  # seeds
-            ["C4", "D4", "E4"],  # pitchnames
-            {"C4": 0, "D4": 1, "E4": 2},  # note_to_int
-            3,  # n_vocab
-            2,  # model_version
-            None,  # tokenizer
+        "test_model": ModelBundle(
+            model=mock_model,
+            seeds=[[0] * 100],
+            pitchnames=["C4", "D4", "E4"],
+            note_to_int={"C4": 0, "D4": 1, "E4": 2},
+            n_vocab=3,
+            model_version=2,
+            tokenizer=None,
         )
     }

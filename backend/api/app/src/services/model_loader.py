@@ -4,11 +4,30 @@ import asyncio
 import json
 import logging
 import os
+from dataclasses import dataclass
+from typing import Any
 
 import torch
 from shared.models import MelodyLSTM
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class ModelBundle:
+    """All artefacts needed to run inference with a loaded model."""
+
+    model: Any
+    seeds: list | None
+    pitchnames: list | None
+    note_to_int: dict | None
+    n_vocab: int
+    model_version: int
+    tokenizer: Any | None
+
+    @property
+    def architecture(self) -> str:
+        return "transformer" if hasattr(self.model, "d_model") else "lstm"
 
 
 def _load_pytorch_model(model_path, metadata_path, seeds_path):
@@ -17,7 +36,7 @@ def _load_pytorch_model(model_path, metadata_path, seeds_path):
     Supports LSTM (v1-v4) and Transformer architectures.
 
     Returns:
-        tuple: (model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer)
+        ModelBundle with all artefacts needed for inference.
     """
     checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
     n_vocab = checkpoint["n_vocab"]
@@ -85,7 +104,15 @@ def _load_pytorch_model(model_path, metadata_path, seeds_path):
         with open(seeds_path, "r") as f:
             seeds = json.load(f)
 
-    return model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer
+    return ModelBundle(
+        model=model,
+        seeds=seeds,
+        pitchnames=pitchnames,
+        note_to_int=note_to_int,
+        n_vocab=n_vocab,
+        model_version=model_version,
+        tokenizer=tokenizer,
+    )
 
 
 async def get_available_models(model_dir):
@@ -96,7 +123,7 @@ async def get_available_models(model_dir):
     - Flat (legacy): models/<name>.pt + <name>_metadata.json + <name>_seeds.json
 
     Returns:
-        dict: model_id -> (model, seeds, pitchnames, note_to_int, n_vocab, model_version, tokenizer)
+        dict: model_id -> ModelBundle
     """
     logger.debug(f"Loading models from {model_dir}")
 
@@ -126,11 +153,9 @@ async def get_available_models(model_dir):
                 continue
 
             try:
-                result = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
-                models[model_id] = result
-                model_version = result[5]
-                architecture = "transformer" if hasattr(result[0], "d_model") else "lstm"
-                logger.info(f"Loaded model: {model_id} (v{model_version}, {architecture})")
+                bundle = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
+                models[model_id] = bundle
+                logger.info(f"Loaded model: {model_id} (v{bundle.model_version}, {bundle.architecture})")
             except Exception as e:
                 logger.error(f"Error loading model {model_id}: {str(e)}")
 
@@ -146,11 +171,9 @@ async def get_available_models(model_dir):
                 continue
 
             try:
-                result = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
-                models[model_id] = result
-                model_version = result[5]
-                architecture = "transformer" if hasattr(result[0], "d_model") else "lstm"
-                logger.info(f"Loaded model: {model_id} (v{model_version}, {architecture})")
+                bundle = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
+                models[model_id] = bundle
+                logger.info(f"Loaded model: {model_id} (v{bundle.model_version}, {bundle.architecture})")
             except Exception as e:
                 logger.error(f"Error loading model {model_id}: {str(e)}")
 
