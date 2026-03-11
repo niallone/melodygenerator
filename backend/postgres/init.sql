@@ -8,8 +8,8 @@ CREATE TABLE IF NOT EXISTS generated_melody (
     instrument_name VARCHAR(100),
     midi_file VARCHAR(255) NOT NULL,
     wav_file VARCHAR(255),
-    temperature FLOAT,
-    num_notes INTEGER,
+    temperature FLOAT CHECK (temperature > 0.0 AND temperature <= 2.0),
+    num_notes INTEGER CHECK (num_notes >= 50 AND num_notes <= 2000),
     created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

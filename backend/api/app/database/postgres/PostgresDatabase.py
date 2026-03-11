@@ -40,7 +40,7 @@ class PostgresDatabase:
     async def initialise(self):
         """Initialise the database connection pool."""
         async with self._init_lock:
-            if self.pool and not self.pool._closed:
+            if self.pool and not self.pool.is_closing():
                 return
             try:
                 pool_config = {
@@ -80,12 +80,17 @@ class PostgresDatabase:
             format="text",
         )
 
-    def retry_operation(max_retries: int = 3, retry_delay: float = 1.0):
-        """Decorator for retrying database operations on connection failures."""
+    def retry_operation():
+        """Decorator for retrying database operations on connection failures.
+
+        Uses self.retries and self.retry_delay from instance config.
+        """
 
         def decorator(func):
             @wraps(func)
             async def wrapper(self, *args, **kwargs):
+                max_retries = self.retries
+                delay = self.retry_delay
                 for attempt in range(max_retries):
                     try:
                         return await func(self, *args, **kwargs)
@@ -96,8 +101,8 @@ class PostgresDatabase:
                         self.logger.warning(
                             f"Operation failed, retrying (attempt {attempt + 1}/{max_retries}): {str(e)}"
                         )
-                        await asyncio.sleep(retry_delay)
-                        if self.pool.is_closed():
+                        await asyncio.sleep(delay)
+                        if self.pool.is_closing():
                             await self.initialise()
 
             return wrapper
