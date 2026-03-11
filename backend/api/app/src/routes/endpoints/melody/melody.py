@@ -86,11 +86,6 @@ class GenerateRequest(BaseModel):
     seed_midi: Optional[str] = Field(default=None, max_length=1_400_000)  # ~1MB base64
 
 
-@router.get("/test")
-async def test():
-    return "Welcome to the Melodygenerator API."
-
-
 @router.get("/instruments")
 async def get_instruments():
     return INSTRUMENTS

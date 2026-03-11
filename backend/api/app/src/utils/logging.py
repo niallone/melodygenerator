@@ -8,9 +8,6 @@ from starlette.requests import Request
 
 logger = logging.getLogger(__name__)
 
-# Paths that should not have bodies logged
-SENSITIVE_PATHS = {"/auth/login", "/auth/logout"}
-
 
 class LoggingMiddleware(BaseHTTPMiddleware):
     async def dispatch(self, request: Request, call_next):

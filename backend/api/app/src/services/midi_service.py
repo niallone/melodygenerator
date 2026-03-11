@@ -7,13 +7,14 @@ import tempfile
 
 import numpy as np
 from midi2audio import FluidSynth
-from music21 import chord, instrument, note, stream
 
 logger = logging.getLogger(__name__)
 
 
 def create_midi_from_notes(prediction_output, filename, midi_program=0):
     """Create a MIDI file from generated notes (legacy pitch-string format)."""
+    from music21 import chord, instrument, note, stream
+
     logger.info(f"Creating MIDI file with program={midi_program}: {filename}")
 
     offset = 0

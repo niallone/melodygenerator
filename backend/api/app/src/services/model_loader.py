@@ -38,6 +38,7 @@ def _load_pytorch_model(model_path, metadata_path, seeds_path):
     Returns:
         ModelBundle with all artefacts needed for inference.
     """
+    # weights_only=False required: checkpoints contain non-tensor metadata (config dicts, vocab lists)
     checkpoint = torch.load(model_path, map_location="cpu", weights_only=False)
     n_vocab = checkpoint["n_vocab"]
     lstm_units = checkpoint.get("lstm_units", [512, 512, 512])

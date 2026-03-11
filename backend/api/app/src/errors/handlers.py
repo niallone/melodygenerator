@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 
 from .api import APIError
 from .database import DatabaseError
-from .http import BadRequestError, MethodNotAllowedError, NotFoundError
+from .http import BadRequestError, NotFoundError
 from .validation import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -23,10 +23,6 @@ def register_error_handlers(app: FastAPI):
     @app.exception_handler(BadRequestError)
     async def handle_bad_request_error(request: Request, exc: BadRequestError):
         return JSONResponse(status_code=400, content=exc.to_dict())
-
-    @app.exception_handler(MethodNotAllowedError)
-    async def handle_method_not_allowed_error(request: Request, exc: MethodNotAllowedError):
-        return JSONResponse(status_code=405, content=exc.to_dict())
 
     @app.exception_handler(DatabaseError)
     async def handle_database_error(request: Request, exc: DatabaseError):
