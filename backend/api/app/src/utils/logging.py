@@ -2,6 +2,7 @@ import json
 import logging
 import time
 import uuid
+from datetime import datetime, timezone
 
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -21,6 +22,8 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         logger.info(
             json.dumps(
                 {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "level": "info",
                     "event": "request_start",
                     "request_id": request_id,
                     "method": request.method,
@@ -35,6 +38,8 @@ class LoggingMiddleware(BaseHTTPMiddleware):
         logger.info(
             json.dumps(
                 {
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                    "level": "info",
                     "event": "request_end",
                     "request_id": request_id,
                     "method": request.method,
