@@ -30,8 +30,8 @@ class PostgresDatabase:
             "user": os.getenv("POSTGRES_USER"),
             "password": os.getenv("POSTGRES_PASSWORD"),
             "database": os.getenv("POSTGRES_DB"),
-            "min_connections": int(os.getenv("PG_DB_MIN_CONNECTIONS", "10")),
-            "max_connections": int(os.getenv("PG_DB_MAX_CONNECTIONS", "100")),
+            "min_connections": int(os.getenv("PG_DB_MIN_CONNECTIONS", "2")),
+            "max_connections": int(os.getenv("PG_DB_MAX_CONNECTIONS", "10")),
             "command_timeout": int(os.getenv("PG_DB_COMMAND_TIMEOUT", "60")),
             "max_inactive_connection_lifetime": int(os.getenv("PG_DB_MAX_INACTIVE_CONNECTION_LIFETIME", "300")),
         }

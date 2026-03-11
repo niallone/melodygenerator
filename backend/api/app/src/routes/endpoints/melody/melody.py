@@ -325,14 +325,15 @@ async def generate_melody_stream(websocket: WebSocket):
 async def get_gallery(request: Request, limit: int = 20, offset: int = 0):
     db = request.app.state.pg_db
     rows = await db.fetch(
-        """SELECT id, model_id, instrument_name, midi_file, wav_file, temperature, num_notes, created
+        """SELECT id, model_id, instrument_name, midi_file, wav_file, temperature, num_notes, created,
+                  COUNT(*) OVER () AS total
            FROM generated_melody ORDER BY created DESC LIMIT $1 OFFSET $2""",
         min(limit, 50),
         max(offset, 0),
     )
-    total = await db.fetchval("SELECT COUNT(*) FROM generated_melody")
+    total = rows[0]["total"] if rows else 0
     return {
-        "melodies": [dict(r) for r in rows],
+        "melodies": [{k: v for k, v in dict(r).items() if k != "total"} for r in rows],
         "total": total,
         "limit": limit,
         "offset": offset,
