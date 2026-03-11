@@ -51,11 +51,10 @@ services:
     build:
       context: ./frontend
       args:
-        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:4050}
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-https://api.melodygenerator.fun}
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:4050
       - VIRTUAL_HOST=melodygenerator.fun
       - VIRTUAL_PORT=3000
       - LETSENCRYPT_HOST=melodygenerator.fun
