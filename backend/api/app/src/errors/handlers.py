@@ -1,6 +1,4 @@
-"""
-This module contains functions for registering error handlers with the FastAPI application.
-"""
+"""Error handler registration for the FastAPI application."""
 
 import logging
 
@@ -8,7 +6,6 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
 from .api import APIError
-from .auth import AuthenticationError, AuthorisationError
 from .database import DatabaseError
 from .http import BadRequestError, MethodNotAllowedError, NotFoundError
 from .validation import ValidationError
@@ -17,12 +14,7 @@ logger = logging.getLogger(__name__)
 
 
 def register_error_handlers(app: FastAPI):
-    """
-    Register error handlers for the FastAPI application.
-
-    Args:
-        app (FastAPI): The FastAPI application instance.
-    """
+    """Register error handlers for the FastAPI application."""
 
     @app.exception_handler(NotFoundError)
     async def handle_not_found_error(request: Request, exc: NotFoundError):
@@ -39,14 +31,6 @@ def register_error_handlers(app: FastAPI):
     @app.exception_handler(DatabaseError)
     async def handle_database_error(request: Request, exc: DatabaseError):
         return JSONResponse(status_code=500, content=exc.to_dict())
-
-    @app.exception_handler(AuthenticationError)
-    async def handle_authentication_error(request: Request, exc: AuthenticationError):
-        return JSONResponse(status_code=401, content=exc.to_dict())
-
-    @app.exception_handler(AuthorisationError)
-    async def handle_authorisation_error(request: Request, exc: AuthorisationError):
-        return JSONResponse(status_code=403, content=exc.to_dict())
 
     @app.exception_handler(ValidationError)
     async def handle_validation_error(request: Request, exc: ValidationError):

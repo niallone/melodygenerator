@@ -1,6 +1,7 @@
 import asyncio
 import logging
 import os
+import time
 import traceback
 import uuid
 from typing import Optional
@@ -11,12 +12,9 @@ from pydantic import BaseModel, Field
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 
-from app.src.services.melody_generator import (
-    generate_melody as generate_melody_service,
-)
-from app.src.services.melody_generator import (
-    generate_melody_streaming,
-)
+from app.src.services.melody_generator import generate_melody as generate_melody_service
+from app.src.services.melody_generator import generate_melody_streaming
+from app.src.services.midi_service import convert_midi_to_wav, create_midi_from_tokens
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -58,38 +56,6 @@ INSTRUMENTS = [
 VALID_INSTRUMENT_IDS = {inst["id"] for inst in INSTRUMENTS}
 _INSTRUMENT_NAMES = {inst["id"]: inst["name"] for inst in INSTRUMENTS}
 
-# Available conditions for conditional generation
-AVAILABLE_CONDITIONS = {
-    "keys": [
-        "Cmaj",
-        "Cmin",
-        "C#maj",
-        "C#min",
-        "Dmaj",
-        "Dmin",
-        "D#maj",
-        "D#min",
-        "Emaj",
-        "Emin",
-        "Fmaj",
-        "Fmin",
-        "F#maj",
-        "F#min",
-        "Gmaj",
-        "Gmin",
-        "G#maj",
-        "G#min",
-        "Amaj",
-        "Amin",
-        "A#maj",
-        "A#min",
-        "Bmaj",
-        "Bmin",
-    ],
-    "tempos": [60, 75, 90, 105, 120, 135, 150, 165, 180, 200],
-    "styles": ["classical", "dance", "jazz", "various"],
-}
-
 
 async def _save_to_gallery(db, model_id, instrument_id, instrument_name, midi_file, wav_file, temperature, num_notes):
     try:
@@ -118,18 +84,6 @@ class GenerateRequest(BaseModel):
     top_p: Optional[float] = Field(default=0.95, gt=0.0, le=1.0)
     num_notes: Optional[int] = Field(default=500, ge=50, le=2000)
     seed_midi: Optional[str] = Field(default=None, max_length=1_400_000)  # ~1MB base64
-    key_signature: Optional[str] = None
-    tempo: Optional[int] = None
-    style: Optional[str] = None
-
-    def validate_conditions(self):
-        """Validate condition parameters against available options."""
-        if self.key_signature and self.key_signature not in AVAILABLE_CONDITIONS["keys"]:
-            raise HTTPException(status_code=400, detail=f"Invalid key_signature: {self.key_signature}")
-        if self.tempo and self.tempo not in AVAILABLE_CONDITIONS["tempos"]:
-            raise HTTPException(status_code=400, detail=f"Invalid tempo: {self.tempo}")
-        if self.style and self.style not in AVAILABLE_CONDITIONS["styles"]:
-            raise HTTPException(status_code=400, detail=f"Invalid style: {self.style}")
 
 
 @router.get("/test")
@@ -140,11 +94,6 @@ async def test():
 @router.get("/instruments")
 async def get_instruments():
     return INSTRUMENTS
-
-
-@router.get("/conditions")
-async def get_conditions():
-    return AVAILABLE_CONDITIONS
 
 
 @router.get("/models")
@@ -186,8 +135,6 @@ async def generate_melody(body: GenerateRequest, request: Request):
         if not model_id:
             raise HTTPException(status_code=400, detail="No model_id provided")
 
-        body.validate_conditions()
-
         models = request.app.state.models
         settings = request.app.state.settings
 
@@ -198,6 +145,7 @@ async def generate_melody(body: GenerateRequest, request: Request):
             f"num_notes={body.num_notes}"
         )
 
+        start_time = time.monotonic()
         try:
             midi_file, wav_file = await asyncio.wait_for(
                 generate_melody_service(
@@ -211,14 +159,14 @@ async def generate_melody(body: GenerateRequest, request: Request):
                     top_k=body.top_k,
                     top_p=body.top_p,
                     seed_midi=body.seed_midi,
-                    key_signature=body.key_signature,
-                    tempo=body.tempo,
-                    style=body.style,
                 ),
                 timeout=600,
             )
         except asyncio.TimeoutError:
             raise HTTPException(status_code=504, detail="Generation timed out")
+
+        duration_ms = round((time.monotonic() - start_time) * 1000)
+        logger.info(f"Generation complete: model={model_id}, notes={body.num_notes}, duration={duration_ms}ms")
 
         midi_basename = os.path.basename(midi_file)
         wav_basename = os.path.basename(wav_file) if wav_file else None
@@ -293,22 +241,25 @@ async def generate_melody_stream(websocket: WebSocket):
 
         token_ids = None
 
-        async for event in generate_melody_streaming(
-            model_id,
-            models,
-            num_notes=num_notes,
-            temperature=temperature,
-            top_k=top_k,
-            top_p=top_p,
-            midi_program=midi_program,
-            key_signature=config.get("key_signature"),
-            tempo=config.get("tempo"),
-            style=config.get("style"),
-        ):
-            if event.get("type") == "sequence_complete":
-                token_ids = event.get("token_ids")
-                continue
-            await websocket.send_json(event)
+        try:
+            async with asyncio.timeout(300):  # 5 minute timeout
+                async for event in generate_melody_streaming(
+                    model_id,
+                    models,
+                    num_notes=num_notes,
+                    temperature=temperature,
+                    top_k=top_k,
+                    top_p=top_p,
+                    midi_program=midi_program,
+                ):
+                    if event.get("type") == "sequence_complete":
+                        token_ids = event.get("token_ids")
+                        continue
+                    await websocket.send_json(event)
+        except TimeoutError:
+            await websocket.send_json({"type": "error", "message": "Generation timed out"})
+            await websocket.close()
+            return
 
         # Generate full MIDI/WAV for download
         output_dir = settings.output_dir
@@ -322,11 +273,7 @@ async def generate_melody_stream(websocket: WebSocket):
         loop = __import__("asyncio").get_event_loop()
 
         if tokenizer and token_ids:
-            from app.src.services.melody_generator import _create_midi_from_tokens_sync
-
-            await loop.run_in_executor(
-                None, _create_midi_from_tokens_sync, token_ids, tokenizer, midi_file, midi_program
-            )
+            await loop.run_in_executor(None, create_midi_from_tokens, token_ids, tokenizer, midi_file, midi_program)
         elif token_ids:
             # Transformer without tokenizer - should not happen in practice
             pass
@@ -334,9 +281,7 @@ async def generate_melody_stream(websocket: WebSocket):
         # Convert to WAV
         wav_path = None
         if settings.soundfont_path and os.path.exists(settings.soundfont_path) and os.path.exists(midi_file):
-            from app.src.services.melody_generator import _convert_midi_to_wav_sync
-
-            await loop.run_in_executor(None, _convert_midi_to_wav_sync, midi_file, wav_file, settings.soundfont_path)
+            await loop.run_in_executor(None, convert_midi_to_wav, midi_file, wav_file, settings.soundfont_path)
             wav_path = wav_file
 
         midi_basename = os.path.basename(midi_file)
