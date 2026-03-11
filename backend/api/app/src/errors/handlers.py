@@ -41,6 +41,5 @@ def register_error_handlers(app: FastAPI):
         logger.exception("An unexpected error occurred.")
         error_details = {
             "error": "An unexpected error occurred.",
-            "type": str(type(exc).__name__),
         }
         return JSONResponse(status_code=500, content=error_details)

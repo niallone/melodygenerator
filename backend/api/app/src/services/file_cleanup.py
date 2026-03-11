@@ -19,6 +19,7 @@ def cleanup_old_files(output_dir: str, max_age: int = MAX_FILE_AGE) -> int:
     if not os.path.isdir(output_dir):
         return 0
 
+    logger.debug(f"Running file cleanup on {output_dir}")
     now = time.time()
     removed = 0
 
@@ -30,8 +31,8 @@ def cleanup_old_files(output_dir: str, max_age: int = MAX_FILE_AGE) -> int:
             if now - os.path.getmtime(filepath) > max_age:
                 os.remove(filepath)
                 removed += 1
-        except OSError:
-            pass
+        except OSError as e:
+            logger.warning(f"Failed to delete {filepath}: {e}")
 
     if removed:
         logger.info(f"Cleaned up {removed} old generated files from {output_dir}")

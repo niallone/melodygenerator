@@ -69,7 +69,7 @@ def app_with_mock_db(app: FastAPI, mock_db):
 
 @pytest.fixture
 def mock_models():
-    """Mock models dict with a fake model entry."""
+    """Mock models dict with a fake LSTM model entry."""
     mock_model = MagicMock()
     mock_model.eval = MagicMock()
     mock_model.parameters = MagicMock(return_value=[])
@@ -85,5 +85,27 @@ def mock_models():
             n_vocab=3,
             model_version=2,
             tokenizer=None,
+        )
+    }
+
+
+@pytest.fixture
+def mock_transformer_models():
+    """Mock models dict with a fake transformer model entry."""
+    mock_model = MagicMock()
+    mock_model.eval = MagicMock()
+    mock_model.parameters = MagicMock(return_value=[])
+    mock_model.d_model = 256
+    mock_model.max_seq_len = 512
+
+    return {
+        "test_transformer": ModelBundle(
+            model=mock_model,
+            seeds=[[0] * 100],
+            pitchnames=None,
+            note_to_int=None,
+            n_vocab=500,
+            model_version=1,
+            tokenizer=MagicMock(),
         )
     }
