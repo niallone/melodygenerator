@@ -292,27 +292,78 @@ async def generate_melody_streaming(
         max_seq_len = getattr(bundle.model, "max_seq_len", 512)
         start = np.random.randint(0, len(bundle.seeds))
         sequence = list(np.array(bundle.seeds[start], dtype=np.int64).flatten())
+        seed_len = len(sequence)
 
         bundle.model.eval()
         offset = 0.0
         with torch.no_grad():
-            for i in range(num_notes):
+            use_kv_cache = hasattr(bundle.model, "generate_step")
+
+            if use_kv_cache:
+                # Prefill: build KV cache from seed sequence
                 input_seq = sequence[-max_seq_len:]
                 input_tensor = torch.LongTensor([input_seq])
+                x = bundle.model.token_embedding(input_tensor)
+                kv_caches = []
+                for layer in bundle.model.layers:
+                    x, cache = layer(x)
+                    kv_caches.append(cache)
+
                 logits = bundle.model(input_tensor)
                 next_logits = logits[0, -1, :]
                 index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
                 sequence.append(index)
+                pos = len(input_seq)
 
-                note_event = token_to_note_event(index, bundle.tokenizer, i, offset)
+                note_event = token_to_note_event(index, bundle.tokenizer, 0, offset)
                 if note_event:
                     offset = note_event.get("offset", offset) + note_event.get("duration", 0.5)
                     yield note_event
 
-                if i % 10 == 0:
-                    await asyncio.sleep(0)
+                # Incremental generation with KV cache
+                for i in range(1, num_notes):
+                    token = torch.LongTensor([[sequence[-1]]])
+                    next_logits, kv_caches = bundle.model.generate_step(token, kv_caches, start_pos=pos)
+                    index = sample_with_top_k_top_p(next_logits[0], temperature=temperature, top_k=top_k, top_p=top_p)
+                    sequence.append(index)
+                    pos += 1
 
-        yield {"type": "sequence_complete", "token_ids": sequence[len(np.array(bundle.seeds[start]).flatten()) :]}
+                    if pos >= max_seq_len:
+                        input_seq = sequence[-max_seq_len:]
+                        input_tensor = torch.LongTensor([input_seq])
+                        x = bundle.model.token_embedding(input_tensor)
+                        kv_caches = []
+                        for layer in bundle.model.layers:
+                            x, cache = layer(x)
+                            kv_caches.append(cache)
+                        pos = len(input_seq)
+
+                    note_event = token_to_note_event(index, bundle.tokenizer, i, offset)
+                    if note_event:
+                        offset = note_event.get("offset", offset) + note_event.get("duration", 0.5)
+                        yield note_event
+
+                    if i % 10 == 0:
+                        await asyncio.sleep(0)
+            else:
+                # Fallback: full forward pass per token
+                for i in range(num_notes):
+                    input_seq = sequence[-max_seq_len:]
+                    input_tensor = torch.LongTensor([input_seq])
+                    logits = bundle.model(input_tensor)
+                    next_logits = logits[0, -1, :]
+                    index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
+                    sequence.append(index)
+
+                    note_event = token_to_note_event(index, bundle.tokenizer, i, offset)
+                    if note_event:
+                        offset = note_event.get("offset", offset) + note_event.get("duration", 0.5)
+                        yield note_event
+
+                    if i % 10 == 0:
+                        await asyncio.sleep(0)
+
+        yield {"type": "sequence_complete", "token_ids": sequence[seed_len:]}
 
     elif bundle.tokenizer is not None:
         start = np.random.randint(0, len(bundle.seeds))
