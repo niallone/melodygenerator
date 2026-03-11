@@ -25,10 +25,7 @@ async def test_download_file_not_found(app_with_mock_db):
     async with AsyncClient(transport=transport, base_url="http://test") as client:
         response = await client.get("/melody/download/nonexistent.mid")
 
-    assert response.status_code == 200  # The route returns {"error": "File not found"} with 200
-    data = response.json()
-    assert "error" in data
-    assert "not found" in data["error"].lower()
+    assert response.status_code == 404
 
 
 @pytest.mark.asyncio
