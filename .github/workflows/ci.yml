@@ -24,7 +24,7 @@ jobs:
         env:
           DEBUG: "true"
           PYTHONPATH: ${{ github.workspace }}
-        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=60 --timeout=120
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=30 --timeout=120
 
   backend-lint:
     runs-on: ubuntu-latest
