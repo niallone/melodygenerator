@@ -23,7 +23,6 @@ jobs:
       - name: Run tests
         env:
           DEBUG: "true"
-          SECRET_KEY: "test-secret-key-for-ci-pipeline-use"
           PYTHONPATH: ${{ github.workspace }}
         run: pytest --cov=app --cov-report=term-missing --timeout=120
 
@@ -105,12 +104,15 @@ jobs:
             git reset --hard origin/main
 
             cd /opt/melodygenerator/prod
-            docker compose build --no-cache
+            docker compose build
             docker compose up -d
 
-            # Health checks
+            # Health checks with polling
             echo "Waiting for services..."
-            sleep 30
-            docker exec mg-api curl -sf http://localhost:4050/health || exit 1
+            for i in $(seq 1 30); do
+              docker exec mg-api curl -sf http://localhost:4050/health && break
+              [ $i -eq 30 ] && echo "API health check failed" && exit 1
+              sleep 2
+            done
             docker exec mg-frontend wget --spider -q http://127.0.0.1:3000 || exit 1
             echo "Deploy successful!"

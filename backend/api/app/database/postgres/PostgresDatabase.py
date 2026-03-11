@@ -2,23 +2,12 @@ import asyncio
 import json
 import logging
 import os
-import re
 from contextlib import asynccontextmanager
 from functools import wraps
 from typing import Any, List, Optional
 
 import asyncpg
 from asyncpg import Connection, Pool
-
-# Pattern for validating SQL identifiers (table/column names)
-_IDENTIFIER_PATTERN = re.compile(r"^[a-zA-Z_][a-zA-Z0-9_]*$")
-
-
-def _validate_identifier(name: str) -> str:
-    """Validate a SQL identifier to prevent injection."""
-    if not _IDENTIFIER_PATTERN.match(name):
-        raise ValueError(f"Invalid SQL identifier: {name!r}")
-    return name
 
 
 class PostgresDatabase:
@@ -41,8 +30,8 @@ class PostgresDatabase:
             "user": os.getenv("POSTGRES_USER"),
             "password": os.getenv("POSTGRES_PASSWORD"),
             "database": os.getenv("POSTGRES_DB"),
-            "min_connections": int(os.getenv("PG_DB_MIN_CONNECTIONS", "10")),
-            "max_connections": int(os.getenv("PG_DB_MAX_CONNECTIONS", "100")),
+            "min_connections": int(os.getenv("PG_DB_MIN_CONNECTIONS", "2")),
+            "max_connections": int(os.getenv("PG_DB_MAX_CONNECTIONS", "10")),
             "command_timeout": int(os.getenv("PG_DB_COMMAND_TIMEOUT", "60")),
             "max_inactive_connection_lifetime": int(os.getenv("PG_DB_MAX_INACTIVE_CONNECTION_LIFETIME", "300")),
         }
@@ -145,29 +134,6 @@ class PostgresDatabase:
         """Fetch a single value from a SQL query."""
         async with self.pool.acquire() as conn:
             return await conn.fetchval(query, *args, column=column, timeout=timeout)
-
-    async def batch_insert(self, table: str, columns: List[str], values: List[List[Any]], chunk_size: int = 1000):
-        """Perform a batch insert operation with validated identifiers."""
-        safe_table = _validate_identifier(table)
-        safe_columns = [_validate_identifier(c) for c in columns]
-        query = f"INSERT INTO {safe_table} ({', '.join(safe_columns)}) VALUES "
-        async with self.transaction() as conn:
-            for i in range(0, len(values), chunk_size):
-                chunk = values[i : i + chunk_size]
-                ncols = len(safe_columns)
-                value_placeholders = [
-                    f"({', '.join('$' + str(j) for j in range(idx * ncols + 1, (idx + 1) * ncols + 1))})"
-                    for idx in range(len(chunk))
-                ]
-                chunk_query = query + ", ".join(value_placeholders)
-                flattened_values = [item for sublist in chunk for item in sublist]
-                await conn.execute(chunk_query, *flattened_values)
-
-    @retry_operation()
-    async def execute_many(self, query: str, args_list: List[List[Any]]):
-        """Execute a query with multiple sets of parameters."""
-        async with self.transaction() as conn:
-            await conn.executemany(query, args_list)
 
     async def close(self):
         """Close the database pool."""

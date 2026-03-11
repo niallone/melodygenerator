@@ -1,8 +1,8 @@
 import asyncio
+import base64
 import logging
 import os
 import time
-import traceback
 import uuid
 from typing import Optional
 
@@ -56,6 +56,9 @@ INSTRUMENTS = [
 VALID_INSTRUMENT_IDS = {inst["id"] for inst in INSTRUMENTS}
 _INSTRUMENT_NAMES = {inst["id"]: inst["name"] for inst in INSTRUMENTS}
 
+# Limit concurrent WebSocket generation streams per worker
+_ws_semaphore = asyncio.Semaphore(5)
+
 
 async def _save_to_gallery(db, model_id, instrument_id, instrument_name, midi_file, wav_file, temperature, num_notes):
     try:
@@ -83,12 +86,17 @@ class GenerateRequest(BaseModel):
     top_k: Optional[int] = Field(default=50, ge=0, le=500)
     top_p: Optional[float] = Field(default=0.95, gt=0.0, le=1.0)
     num_notes: Optional[int] = Field(default=500, ge=50, le=2000)
-    seed_midi: Optional[str] = Field(default=None, max_length=1_400_000)  # ~1MB base64
+    seed_midi: Optional[str] = Field(default=None, max_length=1_400_000)
 
-
-@router.get("/test")
-async def test():
-    return "Welcome to the Melodygenerator API."
+    def validated_seed_midi(self) -> str | None:
+        """Return seed_midi after verifying it is valid base64, or None."""
+        if not self.seed_midi:
+            return None
+        try:
+            base64.b64decode(self.seed_midi, validate=True)
+            return self.seed_midi
+        except Exception:
+            raise HTTPException(status_code=400, detail="seed_midi must be valid base64")
 
 
 @router.get("/instruments")
@@ -108,23 +116,19 @@ async def get_models_list(request: Request):
             request.app.state.models = models
 
         model_list = []
-        for model_id, model_data in models.items():
-            model_obj = model_data[0]
-            architecture = "transformer" if hasattr(model_obj, "d_model") else "lstm"
-            model_version = model_data[5] if len(model_data) > 5 else 1
+        for model_id, bundle in models.items():
             model_list.append(
                 {
                     "id": model_id,
                     "name": model_id,
-                    "architecture": architecture,
-                    "version": model_version,
+                    "architecture": bundle.architecture,
+                    "version": bundle.model_version,
                 }
             )
         return model_list
     except Exception as e:
-        logger.error(f"Error fetching models: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
-        return {"error": f"An error occurred while fetching models: {str(e)}"}
+        logger.exception(f"Error fetching models: {e}")
+        raise HTTPException(status_code=500, detail="Failed to fetch models")
 
 
 @router.post("/generate")
@@ -158,7 +162,7 @@ async def generate_melody(body: GenerateRequest, request: Request):
                     temperature=body.temperature,
                     top_k=body.top_k,
                     top_p=body.top_p,
-                    seed_midi=body.seed_midi,
+                    seed_midi=body.validated_seed_midi(),
                 ),
                 timeout=600,
             )
@@ -205,113 +209,113 @@ async def generate_melody_stream(websocket: WebSocket):
     """WebSocket endpoint for streaming melody generation."""
     await websocket.accept()
     try:
-        config = await websocket.receive_json()
+        async with _ws_semaphore:
+            config = await websocket.receive_json()
 
-        if config.get("type") != "start_generation":
-            await websocket.send_json({"type": "error", "message": "Expected start_generation message"})
-            await websocket.close()
-            return
+            if config.get("type") != "start_generation":
+                await websocket.send_json({"type": "error", "message": "Expected start_generation message"})
+                await websocket.close()
+                return
 
-        model_id = config.get("model_id")
-        if not model_id:
-            await websocket.send_json({"type": "error", "message": "No model_id provided"})
-            await websocket.close()
-            return
+            model_id = config.get("model_id")
+            if not model_id:
+                await websocket.send_json({"type": "error", "message": "No model_id provided"})
+                await websocket.close()
+                return
 
-        models = websocket.app.state.models
-        settings = websocket.app.state.settings
+            models = websocket.app.state.models
+            settings = websocket.app.state.settings
 
-        if model_id not in models:
-            await websocket.send_json({"type": "error", "message": f"Model not found: {model_id}"})
-            await websocket.close()
-            return
+            if model_id not in models:
+                await websocket.send_json({"type": "error", "message": f"Model not found: {model_id}"})
+                await websocket.close()
+                return
 
-        num_notes = min(max(config.get("num_notes", 500), 50), 2000)
-        temperature = min(max(config.get("temperature", 0.8), 0.1), 2.0)
-        top_k = min(max(config.get("top_k", 50), 0), 500)
-        top_p = min(max(config.get("top_p", 0.95), 0.01), 1.0)
-        midi_program = config.get("instrument", 0)
+            num_notes = min(max(config.get("num_notes", 500), 50), 2000)
+            temperature = min(max(config.get("temperature", 0.8), 0.1), 2.0)
+            top_k = min(max(config.get("top_k", 50), 0), 500)
+            top_p = min(max(config.get("top_p", 0.95), 0.01), 1.0)
+            midi_program = config.get("instrument", 0)
 
-        await websocket.send_json(
-            {
-                "type": "generation_started",
-                "total_notes": num_notes,
-            }
-        )
-
-        token_ids = None
-
-        try:
-            async with asyncio.timeout(300):  # 5 minute timeout
-                async for event in generate_melody_streaming(
-                    model_id,
-                    models,
-                    num_notes=num_notes,
-                    temperature=temperature,
-                    top_k=top_k,
-                    top_p=top_p,
-                    midi_program=midi_program,
-                ):
-                    if event.get("type") == "sequence_complete":
-                        token_ids = event.get("token_ids")
-                        continue
-                    await websocket.send_json(event)
-        except TimeoutError:
-            await websocket.send_json({"type": "error", "message": "Generation timed out"})
-            await websocket.close()
-            return
-
-        # Generate full MIDI/WAV for download
-        output_dir = settings.output_dir
-        os.makedirs(output_dir, exist_ok=True)
-        timestamp = uuid.uuid4().hex[:12]
-        midi_file = os.path.join(output_dir, f"generated_melody_{timestamp}.mid")
-        wav_file = os.path.join(output_dir, f"generated_melody_{timestamp}.wav")
-
-        model_data = models[model_id]
-        tokenizer = model_data[6] if len(model_data) > 6 else None
-        loop = __import__("asyncio").get_event_loop()
-
-        if tokenizer and token_ids:
-            await loop.run_in_executor(None, create_midi_from_tokens, token_ids, tokenizer, midi_file, midi_program)
-        elif token_ids:
-            # Transformer without tokenizer - should not happen in practice
-            pass
-
-        # Convert to WAV
-        wav_path = None
-        if settings.soundfont_path and os.path.exists(settings.soundfont_path) and os.path.exists(midi_file):
-            await loop.run_in_executor(None, convert_midi_to_wav, midi_file, wav_file, settings.soundfont_path)
-            wav_path = wav_file
-
-        midi_basename = os.path.basename(midi_file)
-        wav_basename = os.path.basename(wav_path) if wav_path else None
-
-        db = getattr(websocket.app.state, "pg_db", None)
-        if db:
-            instrument_name = _INSTRUMENT_NAMES.get(midi_program, "Unknown")
-            await _save_to_gallery(
-                db, model_id, midi_program, instrument_name, midi_basename, wav_basename, temperature, num_notes
+            await websocket.send_json(
+                {
+                    "type": "generation_started",
+                    "total_notes": num_notes,
+                }
             )
 
-        response = {
-            "type": "generation_complete",
-            "midi_file": midi_basename,
-        }
-        if wav_path:
-            response["wav_file"] = wav_basename
-            response["download_url"] = f"/melody/download/{wav_basename}"
+            token_ids = None
 
-        await websocket.send_json(response)
-        await websocket.close()
+            try:
+                async with asyncio.timeout(300):  # 5 minute timeout
+                    async for event in generate_melody_streaming(
+                        model_id,
+                        models,
+                        num_notes=num_notes,
+                        temperature=temperature,
+                        top_k=top_k,
+                        top_p=top_p,
+                        midi_program=midi_program,
+                    ):
+                        if event.get("type") == "sequence_complete":
+                            token_ids = event.get("token_ids")
+                            continue
+                        await websocket.send_json(event)
+            except TimeoutError:
+                await websocket.send_json({"type": "error", "message": "Generation timed out"})
+                await websocket.close()
+                return
+
+            # Generate full MIDI/WAV for download
+            output_dir = settings.output_dir
+            os.makedirs(output_dir, exist_ok=True)
+            timestamp = uuid.uuid4().hex[:12]
+            midi_file = os.path.join(output_dir, f"generated_melody_{timestamp}.mid")
+            wav_file = os.path.join(output_dir, f"generated_melody_{timestamp}.wav")
+
+            bundle = models[model_id]
+            tokenizer = bundle.tokenizer
+            loop = asyncio.get_event_loop()
+
+            if tokenizer and token_ids:
+                await loop.run_in_executor(None, create_midi_from_tokens, token_ids, tokenizer, midi_file, midi_program)
+            elif token_ids:
+                # Transformer without tokenizer - should not happen in practice
+                pass
+
+            # Convert to WAV
+            wav_path = None
+            if settings.soundfont_path and os.path.exists(settings.soundfont_path) and os.path.exists(midi_file):
+                await loop.run_in_executor(None, convert_midi_to_wav, midi_file, wav_file, settings.soundfont_path)
+                wav_path = wav_file
+
+            midi_basename = os.path.basename(midi_file)
+            wav_basename = os.path.basename(wav_path) if wav_path else None
+
+            db = getattr(websocket.app.state, "pg_db", None)
+            if db:
+                instrument_name = _INSTRUMENT_NAMES.get(midi_program, "Unknown")
+                await _save_to_gallery(
+                    db, model_id, midi_program, instrument_name, midi_basename, wav_basename, temperature, num_notes
+                )
+
+            response = {
+                "type": "generation_complete",
+                "midi_file": midi_basename,
+            }
+            if wav_path:
+                response["wav_file"] = wav_basename
+                response["download_url"] = f"/melody/download/{wav_basename}"
+
+            await websocket.send_json(response)
+            await websocket.close()
 
     except WebSocketDisconnect:
         logger.info("WebSocket client disconnected")
     except Exception as e:
-        logger.error(f"WebSocket error: {str(e)}")
-        logger.error(f"Traceback: {traceback.format_exc()}")
+        logger.exception(f"WebSocket error: {e}")
         try:
-            await websocket.send_json({"type": "error", "message": str(e)})
+            await websocket.send_json({"type": "error", "message": "An internal error occurred"})
             await websocket.close()
         except Exception:
             pass
@@ -321,14 +325,15 @@ async def generate_melody_stream(websocket: WebSocket):
 async def get_gallery(request: Request, limit: int = 20, offset: int = 0):
     db = request.app.state.pg_db
     rows = await db.fetch(
-        """SELECT id, model_id, instrument_name, midi_file, wav_file, temperature, num_notes, created
+        """SELECT id, model_id, instrument_name, midi_file, wav_file, temperature, num_notes, created,
+                  COUNT(*) OVER () AS total
            FROM generated_melody ORDER BY created DESC LIMIT $1 OFFSET $2""",
         min(limit, 50),
         max(offset, 0),
     )
-    total = await db.fetchval("SELECT COUNT(*) FROM generated_melody")
+    total = rows[0]["total"] if rows else 0
     return {
-        "melodies": [dict(r) for r in rows],
+        "melodies": [{k: v for k, v in dict(r).items() if k != "total"} for r in rows],
         "total": total,
         "limit": limit,
         "offset": offset,
@@ -338,27 +343,21 @@ async def get_gallery(request: Request, limit: int = 20, offset: int = 0):
 @router.get("/download/{filename}")
 @limiter.limit("30/minute")
 async def download_file(filename: str, request: Request):
-    try:
-        settings = request.app.state.settings
-        safe_name = os.path.basename(filename)
-        if safe_name != filename or ".." in filename:
-            from fastapi import HTTPException
+    settings = request.app.state.settings
+    safe_name = os.path.basename(filename)
+    if safe_name != filename or ".." in filename:
+        raise HTTPException(status_code=400, detail="Invalid filename")
+    file_path = os.path.join(settings.output_dir, safe_name)
 
-            raise HTTPException(status_code=400, detail="Invalid filename")
-        file_path = os.path.join(settings.output_dir, safe_name)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="File not found")
 
-        if not os.path.exists(file_path):
-            return {"error": "File not found"}
+    media_types = {
+        ".mid": "audio/midi",
+        ".wav": "audio/wav",
+        ".mp3": "audio/mpeg",
+    }
+    ext = os.path.splitext(filename)[1].lower()
+    media_type = media_types.get(ext, "application/octet-stream")
 
-        media_types = {
-            ".mid": "audio/midi",
-            ".wav": "audio/wav",
-            ".mp3": "audio/mpeg",
-        }
-        ext = os.path.splitext(filename)[1].lower()
-        media_type = media_types.get(ext, "application/octet-stream")
-
-        return FileResponse(file_path, filename=filename, media_type=media_type)
-    except Exception as e:
-        logger.error(f"Error downloading file {filename}: {str(e)}")
-        return {"error": "File not found"}
+    return FileResponse(file_path, filename=filename, media_type=media_type)
