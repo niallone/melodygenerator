@@ -3,6 +3,7 @@
 import asyncio
 import logging
 import os
+import time
 import uuid
 
 import numpy as np
@@ -164,13 +165,17 @@ async def generate_melody(
     Returns:
         tuple: (midi_path, wav_path) paths to the generated files.
     """
-    logger.debug(f"Generating melody with model_id: {model_id}")
+    t0 = time.monotonic()
 
     if model_id not in models:
         logger.error(f"Invalid model ID: {model_id}")
         raise ValueError(f"Invalid model ID: {model_id}")
 
     bundle = models[model_id]
+    logger.info(
+        f"generate_melody start: model={model_id}, arch={bundle.architecture}, "
+        f"notes={num_notes}, temp={temperature}, instrument={midi_program}"
+    )
 
     if bundle.seeds is None:
         raise ValueError(f"No seed sequences available for model {model_id}")
@@ -235,6 +240,9 @@ async def generate_melody(
             bundle.model_version,
         )
 
+    inference_ms = round((time.monotonic() - t0) * 1000)
+    logger.info(f"generate_melody inference done: model={model_id}, duration={inference_ms}ms")
+
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
 
@@ -249,14 +257,14 @@ async def generate_melody(
     else:
         await loop.run_in_executor(None, create_midi_from_notes, generated_notes, midi_file, midi_program)
 
-    logger.debug(f"MIDI file saved: {midi_file}")
-
     if soundfont_path and os.path.exists(soundfont_path):
         await loop.run_in_executor(None, convert_midi_to_wav, midi_file, wav_file, soundfont_path)
-        logger.debug(f"WAV file saved: {wav_file}")
     else:
         wav_file = None
         logger.warning("SoundFont not found, skipping WAV conversion")
+
+    total_ms = round((time.monotonic() - t0) * 1000)
+    logger.info(f"generate_melody complete: model={model_id}, total={total_ms}ms")
 
     return midi_file, wav_file
 
@@ -271,6 +279,7 @@ async def generate_melody_streaming(
     midi_program=0,
 ):
     """Async generator that yields note events for WebSocket streaming."""
+    logger.info(f"generate_melody_streaming start: model={model_id}, notes={num_notes}")
     if model_id not in models:
         raise ValueError(f"Invalid model ID: {model_id}")
 
