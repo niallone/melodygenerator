@@ -1,17 +1,14 @@
 import asyncio
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime, timedelta, timezone
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
-import jwt
 import pytest
 from fastapi import FastAPI
 from httpx import ASGITransport, AsyncClient
 
 # Set test environment before importing app
 os.environ["DEBUG"] = "true"
-os.environ["SECRET_KEY"] = "test-secret-key-for-testing-purposes-only"
 
 # Eagerly import create_api at module level so the heavy music21 dependency
 # loads during collection (no per-test timeout) rather than during fixture setup.
@@ -40,7 +37,6 @@ def app() -> FastAPI:
     app = create_api()
     # Override lifespan so tests don't connect to real postgres or load models
     app.router.lifespan_context = _noop_lifespan
-    app.state.settings.secret_key = "test-secret-key-for-testing-purposes-only"
     app.state.settings.debug = True
     app.state.pg_db = None
     app.state.models = {}
@@ -71,36 +67,8 @@ def app_with_mock_db(app: FastAPI, mock_db):
 
 
 @pytest.fixture
-async def authenticated_client(app_with_mock_db: FastAPI, admin_token: str):
-    transport = ASGITransport(app=app_with_mock_db)
-    async with AsyncClient(
-        transport=transport,
-        base_url="http://test",
-        headers={"Authorization": f"Bearer {admin_token}"},
-    ) as ac:
-        yield ac
-
-
-@pytest.fixture
-def admin_token(app: FastAPI):
-    token = jwt.encode(
-        {
-            "user_id": 1,
-            "jti": "test-jti-123",
-            "exp": datetime.now(timezone.utc) + timedelta(hours=1),
-            "iat": datetime.now(timezone.utc),
-        },
-        app.state.settings.secret_key,
-        algorithm="HS256",
-    )
-    return token
-
-
-@pytest.fixture
 def mock_models():
     """Mock models dict with a fake model entry."""
-    from unittest.mock import MagicMock
-
     mock_model = MagicMock()
     mock_model.eval = MagicMock()
     mock_model.parameters = MagicMock(return_value=[])

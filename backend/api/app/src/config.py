@@ -1,4 +1,4 @@
-from pydantic import ConfigDict, model_validator
+from pydantic import ConfigDict
 from pydantic_settings import BaseSettings
 
 
@@ -7,7 +7,6 @@ class Settings(BaseSettings):
 
     model_config = ConfigDict(env_file=".env", extra="ignore")
 
-    secret_key: str = "change-me-in-production"
     model_dir: str = "/usr/src/api/app/model"
     output_dir: str = "/usr/src/api/app/output"
     pg_db_host: str = "localhost"
@@ -24,13 +23,3 @@ class Settings(BaseSettings):
         if self.debug and "http://localhost:3000" not in origins:
             origins.append("http://localhost:3000")
         return origins
-
-    @model_validator(mode="after")
-    def validate_secret_key(self):
-        if self.secret_key == "change-me-in-production":
-            if not self.debug:
-                raise ValueError("secret_key must be changed from default in production")
-        if len(self.secret_key) < 20:
-            if not self.debug:
-                raise ValueError("secret_key must be at least 20 characters long")
-        return self

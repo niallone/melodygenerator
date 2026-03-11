@@ -19,13 +19,13 @@ RUN apt-get update && apt-get install -y \
 # Copy shared models
 COPY shared/ /usr/src/shared/
 
-# Copy project files
+# Install Python dependencies first (better layer caching)
 COPY backend/api/pyproject.toml .
+RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .
+
+# Copy project files
 COPY backend/api/app/ app/
 COPY backend/api/wsgi.py .
-
-# Install Python dependencies (use CPU-only PyTorch for smaller image)
-RUN pip install --no-cache-dir --extra-index-url https://download.pytorch.org/whl/cpu .
 
 # Create non-root user and output directory
 RUN useradd -m appuser && \
@@ -37,4 +37,4 @@ USER appuser
 EXPOSE 4050
 
 # Run the application using Uvicorn
-CMD ["uvicorn", "wsgi:app", "--host", "0.0.0.0", "--port", "4050"]
+CMD ["uvicorn", "wsgi:app", "--host", "0.0.0.0", "--port", "4050", "--workers", "2"]
