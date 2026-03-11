@@ -24,10 +24,11 @@ logger = logging.getLogger(__name__)
 
 async def _periodic_cleanup(output_dir: str, interval: int = 3600):
     """Run file cleanup every `interval` seconds."""
+    loop = asyncio.get_event_loop()
     while True:
         await asyncio.sleep(interval)
         try:
-            cleanup_old_files(output_dir)
+            await loop.run_in_executor(None, cleanup_old_files, output_dir)
         except Exception as e:
             logger.error(f"File cleanup error: {e}")
 

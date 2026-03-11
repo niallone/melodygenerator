@@ -4,6 +4,7 @@ import logging
 import os
 import time
 import uuid
+from pathlib import Path
 from typing import Optional
 
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
@@ -58,6 +59,9 @@ _INSTRUMENT_NAMES = {inst["id"]: inst["name"] for inst in INSTRUMENTS}
 
 # Limit concurrent WebSocket generation streams per worker
 _ws_semaphore = asyncio.Semaphore(5)
+# Track per-IP WebSocket connections (max 2 per IP)
+_ws_connections: dict[str, int] = {}
+_WS_MAX_PER_IP = 2
 
 
 async def _save_to_gallery(db, model_id, instrument_id, instrument_name, midi_file, wav_file, temperature, num_notes):
@@ -208,7 +212,16 @@ async def generate_melody(body: GenerateRequest, request: Request):
 async def generate_melody_stream(websocket: WebSocket):
     """WebSocket endpoint for streaming melody generation."""
     await websocket.accept()
+    client_ip = websocket.client.host if websocket.client else "unknown"
     try:
+        # Per-IP connection limit
+        current = _ws_connections.get(client_ip, 0)
+        if current >= _WS_MAX_PER_IP:
+            await websocket.send_json({"type": "error", "message": "Too many concurrent connections"})
+            await websocket.close()
+            return
+        _ws_connections[client_ip] = current + 1
+
         async with _ws_semaphore:
             config = await websocket.receive_json()
 
@@ -231,11 +244,26 @@ async def generate_melody_stream(websocket: WebSocket):
                 await websocket.close()
                 return
 
-            num_notes = min(max(config.get("num_notes", 500), 50), 2000)
-            temperature = min(max(config.get("temperature", 0.8), 0.1), 2.0)
-            top_k = min(max(config.get("top_k", 50), 0), 500)
-            top_p = min(max(config.get("top_p", 0.95), 0.01), 1.0)
+            # Validate parameters (reject out-of-range instead of silently clamping)
+            num_notes = config.get("num_notes", 500)
+            temperature = config.get("temperature", 0.8)
+            top_k = config.get("top_k", 50)
+            top_p = config.get("top_p", 0.95)
             midi_program = config.get("instrument", 0)
+
+            errors = []
+            if not isinstance(num_notes, int) or not (50 <= num_notes <= 2000):
+                errors.append("num_notes must be an integer between 50 and 2000")
+            if not isinstance(temperature, (int, float)) or not (0.1 <= temperature <= 2.0):
+                errors.append("temperature must be a number between 0.1 and 2.0")
+            if not isinstance(top_k, int) or not (0 <= top_k <= 500):
+                errors.append("top_k must be an integer between 0 and 500")
+            if not isinstance(top_p, (int, float)) or not (0.01 <= top_p <= 1.0):
+                errors.append("top_p must be a number between 0.01 and 1.0")
+            if errors:
+                await websocket.send_json({"type": "error", "message": "; ".join(errors)})
+                await websocket.close()
+                return
 
             await websocket.send_json(
                 {
@@ -319,6 +347,12 @@ async def generate_melody_stream(websocket: WebSocket):
             await websocket.close()
         except Exception:
             pass
+    finally:
+        count = _ws_connections.get(client_ip, 1)
+        if count <= 1:
+            _ws_connections.pop(client_ip, None)
+        else:
+            _ws_connections[client_ip] = count - 1
 
 
 @router.get("/gallery")
@@ -347,9 +381,11 @@ async def download_file(filename: str, request: Request):
     safe_name = os.path.basename(filename)
     if safe_name != filename or ".." in filename:
         raise HTTPException(status_code=400, detail="Invalid filename")
-    file_path = os.path.join(settings.output_dir, safe_name)
+    file_path = Path(settings.output_dir).resolve() / safe_name
+    if not file_path.is_relative_to(Path(settings.output_dir).resolve()):
+        raise HTTPException(status_code=400, detail="Invalid filename")
 
-    if not os.path.exists(file_path):
+    if not file_path.exists():
         raise HTTPException(status_code=404, detail="File not found")
 
     media_types = {
@@ -360,4 +396,4 @@ async def download_file(filename: str, request: Request):
     ext = os.path.splitext(filename)[1].lower()
     media_type = media_types.get(ext, "application/octet-stream")
 
-    return FileResponse(file_path, filename=filename, media_type=media_type)
+    return FileResponse(str(file_path), filename=safe_name, media_type=media_type)
