@@ -135,6 +135,9 @@ async def get_available_models(model_dir):
     models = {}
     loop = asyncio.get_event_loop()
 
+    # Collect model paths to load
+    to_load: list[tuple[str, str, str, str]] = []
+
     for entry in os.listdir(model_dir):
         entry_path = os.path.join(model_dir, entry)
 
@@ -146,37 +149,36 @@ async def get_available_models(model_dir):
 
             if not os.path.exists(model_path):
                 continue
-
-            model_id = entry
-
             if not os.path.exists(metadata_path):
-                logger.warning(f"Skipping {model_id}: no metadata.json found")
+                logger.warning(f"Skipping {entry}: no metadata.json found")
                 continue
-
-            try:
-                bundle = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
-                models[model_id] = bundle
-                logger.info(f"Loaded model: {model_id} (v{bundle.model_version}, {bundle.architecture})")
-            except Exception as e:
-                logger.error(f"Error loading model {model_id}: {str(e)}")
+            to_load.append((entry, model_path, metadata_path, seeds_path))
 
         # Flat layout (legacy): <model_dir>/<name>.pt
         elif entry.endswith(".pt"):
             model_id = os.path.splitext(entry)[0]
-            model_path = entry_path
             metadata_path = os.path.join(model_dir, f"{model_id}_metadata.json")
             seeds_path = os.path.join(model_dir, f"{model_id}_seeds.json")
 
             if not os.path.exists(metadata_path):
                 logger.warning(f"Skipping {model_id}: no metadata file found")
                 continue
+            to_load.append((model_id, entry_path, metadata_path, seeds_path))
 
-            try:
-                bundle = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
-                models[model_id] = bundle
-                logger.info(f"Loaded model: {model_id} (v{bundle.model_version}, {bundle.architecture})")
-            except Exception as e:
-                logger.error(f"Error loading model {model_id}: {str(e)}")
+    # Load all models in parallel
+    async def _load_one(model_id, model_path, metadata_path, seeds_path):
+        try:
+            bundle = await loop.run_in_executor(None, _load_pytorch_model, model_path, metadata_path, seeds_path)
+            logger.info(f"Loaded model: {model_id} (v{bundle.model_version}, {bundle.architecture})")
+            return model_id, bundle
+        except Exception as e:
+            logger.error(f"Error loading model {model_id}: {str(e)}")
+            return model_id, None
+
+    results = await asyncio.gather(*[_load_one(*args) for args in to_load])
+    for model_id, bundle in results:
+        if bundle is not None:
+            models[model_id] = bundle
 
     logger.debug(f"Returning models: {list(models.keys())}")
     return models

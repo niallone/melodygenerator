@@ -37,4 +37,4 @@ USER appuser
 EXPOSE 4050
 
 # Run the application using Uvicorn
-CMD ["uvicorn", "wsgi:app", "--host", "0.0.0.0", "--port", "4050", "--workers", "2"]
+CMD uvicorn wsgi:app --host 0.0.0.0 --port 4050 --workers ${UVICORN_WORKERS:-2}
