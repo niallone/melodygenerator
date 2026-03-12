@@ -16,6 +16,17 @@ class Settings(BaseSettings):
     logging_level: str = "INFO"
     allowed_origins: str = "https://melodygenerator.fun"
 
+    # R2 storage (S3-compatible)
+    r2_endpoint_url: str = ""
+    r2_access_key_id: str = ""
+    r2_secret_access_key: str = ""
+    r2_bucket_name: str = ""
+    r2_public_url: str = ""
+
+    @property
+    def r2_enabled(self) -> bool:
+        return bool(self.r2_endpoint_url and self.r2_access_key_id and self.r2_bucket_name)
+
     @property
     def cors_origins(self) -> list[str]:
         """Parse allowed origins from comma-separated string, adding localhost in debug mode."""
