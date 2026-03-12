@@ -8,8 +8,6 @@ do not leak tracebacks, and that security headers are present on responses.
 import pytest
 from httpx import ASGITransport, AsyncClient
 
-from app.src.errors import NotFoundError
-
 
 @pytest.mark.asyncio
 async def test_unexpected_error_no_traceback(app_with_mock_db):
@@ -32,6 +30,7 @@ async def test_unexpected_error_no_traceback(app_with_mock_db):
 @pytest.mark.asyncio
 async def test_not_found_error(app_with_mock_db):
     """404 errors return a JSON body with a 'message' field."""
+    from app.src.errors import NotFoundError
 
     @app_with_mock_db.get("/test-not-found-handler")
     async def trigger_404():

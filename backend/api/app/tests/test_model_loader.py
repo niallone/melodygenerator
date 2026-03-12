@@ -2,11 +2,11 @@
 
 from unittest.mock import MagicMock
 
-from app.src.services.model_loader import ModelBundle
-
 
 class TestModelBundleArchitecture:
     def test_transformer_architecture(self):
+        from app.src.services.model_loader import ModelBundle
+
         model = MagicMock()
         model.d_model = 256
         bundle = ModelBundle(
@@ -21,6 +21,8 @@ class TestModelBundleArchitecture:
         assert bundle.architecture == "transformer"
 
     def test_lstm_architecture(self):
+        from app.src.services.model_loader import ModelBundle
+
         model = MagicMock(spec=[])
         bundle = ModelBundle(
             model=model,
@@ -34,6 +36,8 @@ class TestModelBundleArchitecture:
         assert bundle.architecture == "lstm"
 
     def test_bundle_stores_fields(self):
+        from app.src.services.model_loader import ModelBundle
+
         model = MagicMock(spec=[])
         bundle = ModelBundle(
             model=model,

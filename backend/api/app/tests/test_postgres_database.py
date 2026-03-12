@@ -3,11 +3,11 @@ from unittest.mock import patch
 
 import pytest
 
-from app.database.postgres.PostgresDatabase import PostgresDatabase
-
 
 class TestFromEnvValidation:
     def test_missing_host_raises(self):
+        from app.database.postgres.PostgresDatabase import PostgresDatabase
+
         env = {
             "POSTGRES_USER": "u",
             "POSTGRES_PASSWORD": "p",
@@ -18,11 +18,15 @@ class TestFromEnvValidation:
                 PostgresDatabase.from_env()
 
     def test_missing_multiple_raises(self):
+        from app.database.postgres.PostgresDatabase import PostgresDatabase
+
         with patch.dict(os.environ, {}, clear=True):
             with pytest.raises(ValueError, match="PG_DB_HOST"):
                 PostgresDatabase.from_env()
 
     def test_all_present_succeeds(self):
+        from app.database.postgres.PostgresDatabase import PostgresDatabase
+
         env = {
             "PG_DB_HOST": "localhost",
             "POSTGRES_USER": "u",
