@@ -95,10 +95,12 @@ async def _upload_to_r2(settings, midi_file, wav_file):
 
     if storage:
         loop = asyncio.get_event_loop()
-        midi_url = await loop.run_in_executor(None, storage.upload_file, midi_file, midi_basename)
+        midi_key = f"melodies/{midi_basename}"
+        midi_url = await loop.run_in_executor(None, storage.upload_file, midi_file, midi_key)
         wav_url = None
         if wav_file:
-            wav_url = await loop.run_in_executor(None, storage.upload_file, wav_file, wav_basename)
+            wav_key = f"melodies/{wav_basename}"
+            wav_url = await loop.run_in_executor(None, storage.upload_file, wav_file, wav_key)
         # Clean up local files after upload
         try:
             os.remove(midi_file)
