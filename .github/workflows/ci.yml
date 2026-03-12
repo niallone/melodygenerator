@@ -19,7 +19,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - name: Install dependencies
-        run: pip install --extra-index-url https://download.pytorch.org/whl/cpu ".[test]"
+        run: pip install --extra-index-url https://download.pytorch.org/whl/cpu -e ".[test]"
       - name: Run tests
         env:
           DEBUG: "true"
