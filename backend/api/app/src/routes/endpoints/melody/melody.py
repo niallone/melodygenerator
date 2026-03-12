@@ -16,6 +16,7 @@ from slowapi.util import get_remote_address
 from app.src.services.melody_generator import generate_melody as generate_melody_service
 from app.src.services.melody_generator import generate_melody_streaming
 from app.src.services.midi_service import convert_midi_to_wav, create_midi_from_tokens
+from app.src.services.storage import get_storage
 
 limiter = Limiter(key_func=get_remote_address)
 
@@ -81,6 +82,33 @@ async def _save_to_gallery(db, model_id, instrument_id, instrument_name, midi_fi
         )
     except Exception as e:
         logger.error(f"Failed to save melody to gallery: {e}")
+
+
+async def _upload_to_r2(settings, midi_file, wav_file):
+    """Upload files to R2 if configured. Returns (midi_ref, wav_ref, midi_url, wav_url).
+
+    When R2 is enabled, refs are full public URLs. When disabled, refs are basenames.
+    """
+    storage = get_storage(settings)
+    midi_basename = os.path.basename(midi_file)
+    wav_basename = os.path.basename(wav_file) if wav_file else None
+
+    if storage:
+        loop = asyncio.get_event_loop()
+        midi_url = await loop.run_in_executor(None, storage.upload_file, midi_file, midi_basename)
+        wav_url = None
+        if wav_file:
+            wav_url = await loop.run_in_executor(None, storage.upload_file, wav_file, wav_basename)
+        # Clean up local files after upload
+        try:
+            os.remove(midi_file)
+            if wav_file:
+                os.remove(wav_file)
+        except OSError:
+            pass
+        return midi_url, wav_url, midi_url, wav_url
+    else:
+        return midi_basename, wav_basename, None, None
 
 
 class GenerateRequest(BaseModel):
@@ -176,8 +204,7 @@ async def generate_melody(body: GenerateRequest, request: Request):
         duration_ms = round((time.monotonic() - start_time) * 1000)
         logger.info(f"Generation complete: model={model_id}, notes={body.num_notes}, duration={duration_ms}ms")
 
-        midi_basename = os.path.basename(midi_file)
-        wav_basename = os.path.basename(wav_file) if wav_file else None
+        midi_ref, wav_ref, midi_url, wav_url = await _upload_to_r2(settings, midi_file, wav_file)
 
         db = request.app.state.pg_db
         if db:
@@ -187,18 +214,18 @@ async def generate_melody(body: GenerateRequest, request: Request):
                 model_id,
                 midi_program,
                 instrument_name,
-                midi_basename,
-                wav_basename,
+                midi_ref,
+                wav_ref,
                 body.temperature,
                 body.num_notes,
             )
 
         response = {
             "message": "Melody generated successfully",
-            "midi_file": midi_basename,
+            "midi_file": midi_ref,
         }
-        if wav_file:
-            response["wav_file"] = wav_basename
+        if wav_ref:
+            response["wav_file"] = wav_ref
 
         return response
     except (HTTPException, ValueError):
@@ -317,23 +344,21 @@ async def generate_melody_stream(websocket: WebSocket):
                 await loop.run_in_executor(None, convert_midi_to_wav, midi_file, wav_file, settings.soundfont_path)
                 wav_path = wav_file
 
-            midi_basename = os.path.basename(midi_file)
-            wav_basename = os.path.basename(wav_path) if wav_path else None
+            midi_ref, wav_ref, midi_url, wav_url = await _upload_to_r2(settings, midi_file, wav_path)
 
             db = getattr(websocket.app.state, "pg_db", None)
             if db:
                 instrument_name = _INSTRUMENT_NAMES.get(midi_program, "Unknown")
                 await _save_to_gallery(
-                    db, model_id, midi_program, instrument_name, midi_basename, wav_basename, temperature, num_notes
+                    db, model_id, midi_program, instrument_name, midi_ref, wav_ref, temperature, num_notes
                 )
 
             response = {
                 "type": "generation_complete",
-                "midi_file": midi_basename,
+                "midi_file": midi_ref,
             }
-            if wav_path:
-                response["wav_file"] = wav_basename
-                response["download_url"] = f"/melody/download/{wav_basename}"
+            if wav_ref:
+                response["wav_file"] = wav_ref
 
             await websocket.send_json(response)
             await websocket.close()

@@ -67,13 +67,17 @@ export async function generateMelody(
   return {
     id: Date.now(),
     name: audioFile,
-    url: `${API_URL}/melody/download/${audioFile}`,
-    midiUrl: `${API_URL}/melody/download/${data.midi_file}`,
+    url: getDownloadUrl(audioFile),
+    midiUrl: getDownloadUrl(data.midi_file),
   };
 }
 
-export function getDownloadUrl(filename: string): string {
-  return `${API_URL}/melody/download/${filename}`;
+export function getDownloadUrl(fileRef: string): string {
+  // If already a full URL (R2), use directly; otherwise build API download URL
+  if (fileRef.startsWith('http://') || fileRef.startsWith('https://')) {
+    return fileRef;
+  }
+  return `${API_URL}/melody/download/${fileRef}`;
 }
 
 export async function fetchGallery(limit: number = 20, offset: number = 0): Promise<GalleryResponse> {

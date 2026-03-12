@@ -81,10 +81,18 @@ describe('generateMelody', () => {
 });
 
 describe('getDownloadUrl', () => {
-  it('returns correct URL format', async () => {
+  it('returns correct URL format for filename', async () => {
     const { getDownloadUrl } = await loadApi();
     const url = getDownloadUrl('melody_123.wav');
 
     expect(url).toBe('https://api.melodygenerator.fun/melody/download/melody_123.wav');
+  });
+
+  it('returns full URL as-is for R2 URLs', async () => {
+    const { getDownloadUrl } = await loadApi();
+    const r2Url = 'https://files.melodygenerator.fun/melody_123.wav';
+    const url = getDownloadUrl(r2Url);
+
+    expect(url).toBe(r2Url);
   });
 });

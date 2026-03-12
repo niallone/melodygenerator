@@ -35,8 +35,11 @@ interface GalleryMelody {
 
 // ─── API helpers ───
 
-function downloadUrl(filename: string) {
-  return `${API_URL}/melody/download/${filename}`;
+function downloadUrl(fileRef: string) {
+  if (fileRef.startsWith('http://') || fileRef.startsWith('https://')) {
+    return fileRef;
+  }
+  return `${API_URL}/melody/download/${fileRef}`;
 }
 
 async function fetchGallery(limit = 30): Promise<{ melodies: GalleryMelody[] }> {
