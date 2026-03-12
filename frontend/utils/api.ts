@@ -6,8 +6,25 @@ export const WS_URL = (process.env.NEXT_PUBLIC_API_URL || 'https://api.melodygen
   .replace('http://', 'ws://')
   .replace('https://', 'wss://');
 
+async function fetchWithRetry(url: string, options?: RequestInit, maxRetries = 3): Promise<Response> {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      const response = await fetch(url, options);
+      if (response.status >= 500 && attempt < maxRetries - 1) {
+        await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+        continue;
+      }
+      return response;
+    } catch (error) {
+      if (attempt === maxRetries - 1) throw error;
+      await new Promise((r) => setTimeout(r, 1000 * (attempt + 1)));
+    }
+  }
+  throw new Error('fetchWithRetry: unreachable');
+}
+
 export async function fetchModels() {
-  const response = await fetch(`${API_URL}/melody/models`);
+  const response = await fetchWithRetry(`${API_URL}/melody/models`);
   if (!response.ok) {
     throw new Error(`Failed to fetch models: ${response.statusText}`);
   }
@@ -15,7 +32,7 @@ export async function fetchModels() {
 }
 
 export async function fetchInstruments() {
-  const response = await fetch(`${API_URL}/melody/instruments`);
+  const response = await fetchWithRetry(`${API_URL}/melody/instruments`);
   if (!response.ok) {
     throw new Error(`Failed to fetch instruments: ${response.statusText}`);
   }
@@ -23,7 +40,7 @@ export async function fetchInstruments() {
 }
 
 export async function fetchConditions() {
-  const response = await fetch(`${API_URL}/melody/conditions`);
+  const response = await fetchWithRetry(`${API_URL}/melody/conditions`);
   if (!response.ok) {
     throw new Error(`Failed to fetch conditions: ${response.statusText}`);
   }
@@ -81,7 +98,7 @@ export function getDownloadUrl(fileRef: string): string {
 }
 
 export async function fetchGallery(limit: number = 20, offset: number = 0): Promise<GalleryResponse> {
-  const response = await fetch(`${API_URL}/melody/gallery?limit=${limit}&offset=${offset}`);
+  const response = await fetchWithRetry(`${API_URL}/melody/gallery?limit=${limit}&offset=${offset}`);
   if (!response.ok) throw new Error('Failed to fetch gallery');
   return response.json();
 }

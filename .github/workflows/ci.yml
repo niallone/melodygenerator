@@ -24,7 +24,7 @@ jobs:
         env:
           DEBUG: "true"
           PYTHONPATH: ${{ github.workspace }}
-        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=30 --timeout=120
+        run: pytest --cov=app --cov-report=term-missing --cov-fail-under=40 --timeout=120
 
   backend-lint:
     runs-on: ubuntu-latest
@@ -100,6 +100,7 @@ jobs:
           script: |
             set -e
             cd /opt/melodygenerator/repo
+            PREV_COMMIT=$(git rev-parse HEAD)
             git fetch origin main
             git reset --hard origin/main
 
@@ -109,14 +110,30 @@ jobs:
 
             # Health checks with polling
             echo "Waiting for services..."
+            API_OK=false
             for i in $(seq 1 30); do
-              docker exec mg-api curl -sf http://localhost:4050/health && break
-              [ $i -eq 30 ] && echo "API health check failed" && exit 1
+              if docker exec mg-api curl -sf http://localhost:4050/health; then
+                API_OK=true
+                break
+              fi
               sleep 2
             done
+            FE_OK=false
             for i in $(seq 1 30); do
-              docker exec mg-frontend wget --spider -q http://127.0.0.1:3000 && break
-              [ $i -eq 30 ] && echo "Frontend health check failed" && exit 1
+              if docker exec mg-frontend wget --spider -q http://127.0.0.1:3000; then
+                FE_OK=true
+                break
+              fi
               sleep 2
             done
+
+            if [ "$API_OK" = false ] || [ "$FE_OK" = false ]; then
+              echo "Health check failed — rolling back to $PREV_COMMIT"
+              cd /opt/melodygenerator/repo
+              git reset --hard "$PREV_COMMIT"
+              cd /opt/melodygenerator/prod
+              docker compose build
+              docker compose up -d
+              exit 1
+            fi
             echo "Deploy successful!"
