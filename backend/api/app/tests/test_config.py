@@ -3,15 +3,15 @@ from app.src.config import Settings
 
 class TestCorsOrigins:
     def test_single_origin(self):
-        s = Settings(allowed_origins="https://example.com")
+        s = Settings(allowed_origins="https://example.com", debug=False)
         assert s.cors_origins == ["https://example.com"]
 
     def test_multiple_origins(self):
-        s = Settings(allowed_origins="https://a.com, https://b.com")
+        s = Settings(allowed_origins="https://a.com, https://b.com", debug=False)
         assert s.cors_origins == ["https://a.com", "https://b.com"]
 
     def test_empty_string(self):
-        s = Settings(allowed_origins="")
+        s = Settings(allowed_origins="", debug=False)
         assert s.cors_origins == []
 
     def test_debug_adds_localhost(self):
