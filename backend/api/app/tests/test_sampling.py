@@ -2,16 +2,18 @@
 
 import torch
 
-from app.src.services.sampling import sample_with_top_k_top_p
-
 
 def test_sample_returns_valid_index():
+    from app.src.services.sampling import sample_with_top_k_top_p
+
     logits = torch.randn(100)
     index = sample_with_top_k_top_p(logits, temperature=1.0)
     assert 0 <= index < 100
 
 
 def test_top_k_limits_candidates():
+    from app.src.services.sampling import sample_with_top_k_top_p
+
     logits = torch.zeros(100)
     logits[42] = 10.0  # Make one token dominant
     index = sample_with_top_k_top_p(logits, temperature=0.1, top_k=1)
@@ -19,6 +21,8 @@ def test_top_k_limits_candidates():
 
 
 def test_top_p_nucleus_sampling():
+    from app.src.services.sampling import sample_with_top_k_top_p
+
     logits = torch.full((100,), -10.0)
     logits[0] = 10.0
     logits[1] = 9.0
@@ -28,6 +32,8 @@ def test_top_p_nucleus_sampling():
 
 
 def test_high_temperature_produces_varied_output():
+    from app.src.services.sampling import sample_with_top_k_top_p
+
     logits = torch.zeros(10)
     seen = set()
     for _ in range(200):
@@ -38,6 +44,8 @@ def test_high_temperature_produces_varied_output():
 
 
 def test_low_temperature_concentrates():
+    from app.src.services.sampling import sample_with_top_k_top_p
+
     logits = torch.zeros(100)
     logits[7] = 5.0
     results = [sample_with_top_k_top_p(logits, temperature=0.01) for _ in range(50)]

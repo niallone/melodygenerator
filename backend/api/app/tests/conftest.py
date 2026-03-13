@@ -10,11 +10,6 @@ from httpx import ASGITransport, AsyncClient
 # Set test environment before importing app
 os.environ["DEBUG"] = "true"
 
-# Eagerly import create_api at module level so the heavy music21 dependency
-# loads during collection (no per-test timeout) rather than during fixture setup.
-from app.src.api import create_api  # noqa: E402
-from app.src.services.model_loader import ModelBundle  # noqa: E402
-
 
 @asynccontextmanager
 async def _noop_lifespan(app):
@@ -35,6 +30,8 @@ def asyncio_default_fixture_loop_scope():
 
 @pytest.fixture(scope="module")
 def app() -> FastAPI:
+    from app.src.api import create_api
+
     app = create_api()
     # Override lifespan so tests don't connect to real postgres or load models
     app.router.lifespan_context = _noop_lifespan
@@ -70,6 +67,8 @@ def app_with_mock_db(app: FastAPI, mock_db):
 @pytest.fixture
 def mock_models():
     """Mock models dict with a fake LSTM model entry."""
+    from app.src.services.model_loader import ModelBundle
+
     mock_model = MagicMock()
     mock_model.eval = MagicMock()
     mock_model.parameters = MagicMock(return_value=[])
@@ -92,6 +91,8 @@ def mock_models():
 @pytest.fixture
 def mock_transformer_models():
     """Mock models dict with a fake transformer model entry."""
+    from app.src.services.model_loader import ModelBundle
+
     mock_model = MagicMock()
     mock_model.eval = MagicMock()
     mock_model.parameters = MagicMock(return_value=[])

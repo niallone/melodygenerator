@@ -35,6 +35,15 @@ class PostgresDatabase:
             "command_timeout": int(os.getenv("PG_DB_COMMAND_TIMEOUT", "60")),
             "max_inactive_connection_lifetime": int(os.getenv("PG_DB_MAX_INACTIVE_CONNECTION_LIFETIME", "300")),
         }
+        required = {
+            "host": "PG_DB_HOST",
+            "user": "POSTGRES_USER",
+            "password": "POSTGRES_PASSWORD",
+            "database": "POSTGRES_DB",
+        }
+        missing = [env_var for key, env_var in required.items() if not config.get(key)]
+        if missing:
+            raise ValueError(f"Missing required database environment variables: {', '.join(missing)}")
         return cls(config)
 
     async def initialise(self):
@@ -49,8 +58,8 @@ class PostgresDatabase:
                     "user": self.config["user"],
                     "password": self.config["password"],
                     "database": self.config["database"],
-                    "min_size": self.config.get("min_connections", 10),
-                    "max_size": self.config.get("max_connections", 100),
+                    "min_size": self.config.get("min_connections", 2),
+                    "max_size": self.config.get("max_connections", 10),
                     "command_timeout": self.config.get("command_timeout", 60),
                     "max_inactive_connection_lifetime": self.config.get("max_inactive_connection_lifetime", 300),
                     "connection_class": asyncpg.connection.Connection,

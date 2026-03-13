@@ -60,7 +60,9 @@ _INSTRUMENT_NAMES = {inst["id"]: inst["name"] for inst in INSTRUMENTS}
 
 # Limit concurrent WebSocket generation streams per worker
 _ws_semaphore = asyncio.Semaphore(5)
-# Track per-IP WebSocket connections (max 2 per IP)
+# Track per-IP WebSocket connections (max 2 per IP).
+# NOTE: This dict is process-local and not shared across Uvicorn workers.
+# Run with a single worker (UVICORN_WORKERS=1) to ensure accurate tracking.
 _ws_connections: dict[str, int] = {}
 _WS_MAX_PER_IP = 2
 
