@@ -24,8 +24,7 @@ export default function About() {
         />
 
         <div className="relative z-10 max-w-5xl mx-auto w-full">
-          <p className="text-xs uppercase tracking-[0.3em] text-indigo-300/80 mb-6">Deep Dive</p>
-          <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-bold leading-[0.9] tracking-tight mb-6">
+          <h1 className="text-[clamp(2.5rem,6vw,5.5rem)] font-bold leading-[1.1] tracking-tight mb-6">
             Eight models,
             <br />
             <span className="bg-gradient-to-r from-indigo-400 via-violet-400 to-fuchsia-400 bg-clip-text text-transparent">
@@ -83,11 +82,11 @@ export default function About() {
             <span className="text-white/40">becomes tokens</span>
           </h2>
           <p className="text-white/50 max-w-xl text-lg font-light mb-16">
-            The single biggest impact on generation quality. Three strategies, each building on the last.
+            Three strategies, each building on the last.
           </p>
 
           <p className="text-sm text-white/30 mb-8 italic">
-            V1 was the first experiment, a simple proof of concept that&apos;s since been lost. Everything here starts from V2.
+            V1 was the first experiment, a simple proof of concept that&apos;s since been lost to the ether. Everything here starts from V2.
           </p>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden">

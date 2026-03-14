@@ -39,9 +39,6 @@ export default function Research() {
         />
 
         <div className="relative z-10 max-w-5xl mx-auto w-full">
-          <p className="text-xs uppercase tracking-[0.3em] text-indigo-300/80 mb-6">
-            Technical Report
-          </p>
           <h1 className="text-[clamp(2rem,5vw,4rem)] font-bold leading-[1] tracking-tight mb-6">
             Autoregressive Symbolic Music Generation
             <br />
