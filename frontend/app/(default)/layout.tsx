@@ -26,6 +26,11 @@ function MagazineHeader() {
                 </Link>
               </li>
               <li>
+                <Link href="/research" className="text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white transition-colors">
+                  Research
+                </Link>
+              </li>
+              <li>
                 <a href="https://github.com/niallone/melodygenerator" target="_blank" rel="noopener noreferrer" className="text-xs uppercase tracking-[0.15em] text-white/50 hover:text-white transition-colors">
                   GitHub
                 </a>
