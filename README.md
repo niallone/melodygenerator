@@ -12,10 +12,8 @@ Try it at [melodygenerator.fun](https://melodygenerator.fun).
 - 27 General MIDI instruments (piano, guitar, strings, synths, etc.)
 - Advanced generation controls: temperature, top-k, top-p (nucleus) sampling
 - Melody continuation from uploaded MIDI files
-- Conditional generation with key signature, tempo, and style
 - Real-time WebSocket streaming with live piano roll visualisation
 - Rate-limited API endpoints
-- User authentication with JWT and token revocation
 
 ## Architecture
 
@@ -128,7 +126,7 @@ melodygenerator/
 │   ├── v6-remi/        # LSTM with REMI tokenization
 │   ├── v7-transformer/ # Music Transformer with REMI + BPE
 │   ├── v8-transformer-bpe/ # Music Transformer with BPE 1024
-│   └── training-data/  # MIDI datasets used for training
+│   └── training_data/  # MIDI datasets used for training
 └── docker-compose.yml
 ```
 
@@ -136,17 +134,17 @@ melodygenerator/
 
 | Model | Genre | Training Data | Architecture |
 |-------|-------|---------------|--------------|
-| v2 | R&B / 90s Hip Hop | 25 songs | LSTM (3x512) |
-| v3 | Dance | ~200 songs | LSTM (3x512) |
-| v4 | Jazz | ~180 songs | LSTM (3x512) |
-| v5 | Various | 275 songs | LSTM (3x512) |
-| v6 | Various | 275 songs | LSTM (3x512, REMI) |
-| v7 | Various | 275 songs | Transformer (8L/8H/512d, REMI + BPE) |
+| v2 | R&B / 90s Hip Hop | 24 songs | LSTM [256,512,256], float input, TF/Keras |
+| v3 | Dance | ~200 songs | LSTM [256,512,256], float input, TF/Keras |
+| v4 | Jazz | ~120 songs | LSTM [256,512,256], float input, TF/Keras |
+| v5 | Various | 275 songs | LSTM [512,512,512], float input, TF/Keras |
+| v6 | Various | 275 songs | LSTM [512,512,512], embedding 128d, REMI, PyTorch |
+| v7 | Various | 275 songs | Transformer (8L/8H/512d, REMI + BPE 512) |
 | v8 | Various + Classical | 275 songs + MAESTRO | Transformer (8L/8H/512d, REMI + BPE 1024) |
 
 ### Model Architectures
 
-**LSTM** (v1–v6): 3-layer LSTM with 512 units, optional embedding layer and multi-head self-attention. v1–v5 use legacy pitch-string tokenization; v6 uses MidiTok REMI tokenization.
+**LSTM** (v1–v6): 3-layer LSTM. v1–v4 used [256, 512, 256] hidden units with float-normalised input (TensorFlow/Keras). v5 widened to [512, 512, 512]. v6 added a learned embedding layer (128 dimensions) and was the first version trained in PyTorch. v1–v5 use legacy pitch-string tokenization; v6 uses MidiTok REMI tokenization.
 
 **Music Transformer** (v7+): 8-layer Transformer with RoPE positional encoding, SwiGLU activations, RMSNorm, 8 attention heads, 512-dim embeddings, 2048-dim feed-forward layers. Uses REMI tokenization with BPE compression and causal masking for autoregressive generation.
 
@@ -165,7 +163,6 @@ melodygenerator/
 |--------|----------|-------------|
 | GET | `/melody/models` | List available models |
 | GET | `/melody/instruments` | List MIDI instruments |
-| GET | `/melody/conditions` | Available keys, tempos, styles |
 | POST | `/melody/generate` | Generate a melody (10/min) |
 | WS | `/melody/generate/stream` | Stream generation in real-time |
 | GET | `/melody/gallery` | Public gallery of generated melodies |
@@ -189,7 +186,7 @@ docker compose up --build
 This starts:
 - **Frontend** at `http://localhost:3000`
 - **API** at `http://localhost:4050`
-- **PostgreSQL** at `localhost:5432`
+- **PostgreSQL** on the internal Docker network (not exposed to host)
 
 ### Local Development
 
