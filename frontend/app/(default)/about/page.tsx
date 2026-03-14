@@ -65,7 +65,7 @@ export default function About() {
               <ExtLink href="https://arxiv.org/abs/1809.04281">Music Transformer</ExtLink> (Huang et al., 2019),
               the <ExtLink href="https://arxiv.org/abs/2002.00212">Pop Music Transformer</ExtLink> (Huang &amp; Yang, 2020) which introduced REMI tokenisation,
               and <ExtLink href="https://arxiv.org/abs/2301.11975">Fradet et al. (2023)</ExtLink> on BPE compression for symbolic music.
-              V8 trains on the <ExtLink href="https://arxiv.org/abs/1810.12247">MAESTRO dataset</ExtLink>: 1,276 competition piano performances.
+              V8 trains on the <ExtLink href="https://arxiv.org/abs/1810.12247">MAESTRO dataset</ExtLink> (v3): 1,276 competition piano performances.
             </p>
           </div>
         </div>
@@ -93,7 +93,7 @@ export default function About() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-px bg-white/[0.06] rounded-xl overflow-hidden">
             {[
               { era: 'V2\u2013V5', name: 'Pitch Strings', tokens: '59\u20131,279', desc: 'Raw pitch names and chord integers. No timing, no velocity. The model learns temporal structure purely from position.' },
-              { era: 'V6', name: 'REMI', tokens: '362', desc: 'Typed tokens: Position, Pitch, Velocity, Duration, Tempo, Chord, Rest. Explicit musical structure. Vocabulary dropped despite encoding more.' },
+              { era: 'V6', name: 'REMI', tokens: '362', desc: 'Typed tokens: Bar, Position, Pitch, Velocity, Duration, Tempo, Chord, Rest. Explicit musical structure. Vocabulary dropped despite encoding more.' },
               { era: 'V7\u2013V8', name: 'REMI + BPE', tokens: '512\u20131,024', desc: 'Byte Pair Encoding compresses multi-token note events into single merged tokens. More musical context per window.' },
             ].map((t) => (
               <div key={t.name} className="p-8 bg-white/[0.02]">
@@ -153,7 +153,7 @@ export default function About() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-white/[0.06] rounded-xl overflow-hidden">
             {[
-              { name: 'Data Pipeline', desc: 'MIDI files split into train/val before augmentation to prevent leakage. Pitch shifting (\u00B16 semitones) triples effective dataset size.' },
+              { name: 'Data Pipeline', desc: 'MIDI files split into train/val before augmentation to prevent leakage. Pitch shifting (\u00B16 semitones) approximately triples effective dataset size.' },
               { name: 'Sequence Prep', desc: 'Sliding window over token sequences. Sequence length 256 for Transformer (512 max context at inference), 100 for LSTM. Configurable stride controls overlap.' },
               { name: 'Optimiser', desc: 'AdamW with cosine annealing (LSTM) or linear warmup + cosine decay (Transformer). Gradient clipping at norm 1.0.' },
               { name: 'Early Stopping', desc: 'Best checkpoint saved by validation loss. Training halts after 10\u201315 epochs without improvement. V7 stopped at epoch 45, V8 ran all 100.' },
@@ -182,7 +182,7 @@ export default function About() {
               {[
                 { name: 'Temperature', range: '0.1 \u2013 2.0', dflt: '0.8', desc: 'Divides logits before softmax. Below 1.0 sharpens the distribution (safer, more predictable). Above 1.0 flattens it (more surprising, more diverse).' },
                 { name: 'Top-K', range: '0 \u2013 500', dflt: '50', desc: 'Keeps only the k highest-probability tokens. Everything else goes to negative infinity. Prevents sampling from the incoherent long tail.' },
-                { name: 'Top-P (Nucleus)', range: '0.1 \u2013 1.0', dflt: '0.95', desc: 'Includes tokens until cumulative probability exceeds p. Adapts dynamically: fewer candidates when confident, more when uncertain.' },
+                { name: 'Top-P (Nucleus)', range: '0.01 \u2013 1.0', dflt: '0.95', desc: 'Includes tokens until cumulative probability exceeds p. Adapts dynamically: fewer candidates when confident, more when uncertain.' },
               ].map((p) => (
                 <div key={p.name} className="flex gap-6">
                   <div className="flex-shrink-0 w-20 pt-1">
@@ -206,8 +206,8 @@ export default function About() {
           <p className="text-xs uppercase tracking-[0.3em] text-indigo-400/80 mb-8 font-medium">Key Insights</p>
           {[
             { bold: 'Same architecture, different data, different vocabularies.', rest: 'V2\u2013V4 share identical LSTM configs but vocabulary ranged from 59 to 1,279 tokens. Jazz chord voicings alone drove a 21x increase over R&B.' },
-            { bold: 'Tokenisation changed more than widening the network.', rest: 'V5 widened to [512, 512, 512] but kept raw encoding. V6 switched to REMI and the vocabulary dropped from 629 to 362 while encoding timing, velocity, and dynamics.' },
-            { bold: 'V7 and V8 share the same architecture', rest: 'but differ in scale: V8 doubled BPE vocabulary to 1,024 and trained on 6x more data. V7 early-stopped at epoch 45 with val loss 0.095; V8 ran all 100 epochs.' },
+            { bold: 'Tokenisation changed more than widening the network.', rest: 'V5 widened to [512, 512, 512] but kept float input and pitch-string encoding. V6 switched to PyTorch, added learned embeddings, and adopted REMI tokenisation. Vocabulary dropped from 629 to 362 while encoding timing, velocity, and dynamics.' },
+            { bold: 'V7 and V8 share the same architecture', rest: 'but differ in scale: V8 doubled BPE vocabulary to 1,024 and trained on 6x more data. V7 early-stopped at epoch 45 with best val loss 0.0952; V8 ran all 100 epochs.' },
           ].map((o, i) => (
             <div key={i} className="flex gap-6 items-start">
               <span className="flex-shrink-0 text-4xl font-bold text-indigo-500/20 leading-none font-mono">{String(i + 1).padStart(2, '0')}</span>
