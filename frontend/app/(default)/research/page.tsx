@@ -24,7 +24,7 @@ export default function Research() {
   return (
     <>
       {/* ─── HEADER ─── */}
-      <section className="relative min-h-[50vh] flex items-end overflow-hidden pb-20 px-6 sm:px-10">
+      <section className="relative min-h-[60vh] flex items-end overflow-hidden pb-20 px-6 sm:px-10">
         <div className="absolute inset-0 overflow-hidden">
           <div className="absolute top-20 left-1/3 w-[500px] h-[500px] rounded-full bg-violet-600/20 blur-[120px]" />
           <div className="absolute bottom-10 right-1/4 w-[400px] h-[400px] rounded-full bg-indigo-600/15 blur-[100px]" />
