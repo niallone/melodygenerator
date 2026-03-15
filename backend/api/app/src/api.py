@@ -4,27 +4,24 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
-from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi import _rate_limit_exceeded_handler
 from slowapi.errors import RateLimitExceeded
-from slowapi.util import get_remote_address
 from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.database.postgres.database import pg_db
-from app.src.dependencies import get_settings
+from app.src.dependencies import get_settings, limiter
 from app.src.errors.handlers import register_error_handlers
 from app.src.routes import router as routes_router
 from app.src.services.file_cleanup import cleanup_old_files
 from app.src.services.melody_generator import get_available_models
 from app.src.utils.logging import LoggingMiddleware
 
-limiter = Limiter(key_func=get_remote_address)
-
 logger = logging.getLogger(__name__)
 
 
 async def _periodic_cleanup(output_dir: str, interval: int = 3600):
     """Run file cleanup every `interval` seconds."""
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     while True:
         await asyncio.sleep(interval)
         try:

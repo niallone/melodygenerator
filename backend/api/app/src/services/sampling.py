@@ -16,12 +16,13 @@ def sample_with_top_k_top_p(logits, temperature=1.0, top_k=0, top_p=1.0):
     Returns:
         int: Sampled token index.
     """
-    logits = logits / temperature
+    logits = logits.clone() / temperature
 
-    # Top-k filtering
+    # Track top-k indices before filtering for fallback
+    top_k_indices = None
     if top_k > 0:
         top_k = min(top_k, logits.size(-1))
-        values, _ = torch.topk(logits, top_k)
+        values, top_k_indices = torch.topk(logits, top_k)
         min_val = values[-1]
         logits = torch.where(logits < min_val, torch.tensor(float("-inf")), logits)
 
@@ -37,11 +38,8 @@ def sample_with_top_k_top_p(logits, temperature=1.0, top_k=0, top_p=1.0):
 
     # Handle case where all logits are -inf after filtering
     if torch.all(logits == float("-inf")):
-        if top_k > 0:
-            k = min(top_k, logits.size(-1))
-            uniform = torch.zeros_like(logits)
-            uniform[:k] = 1.0 / k
-            return int(np.random.choice(len(uniform.numpy()), p=uniform.numpy()))
+        if top_k_indices is not None:
+            return int(top_k_indices[np.random.randint(0, len(top_k_indices))].item())
         return int(np.random.randint(0, logits.size(-1)))
 
     probabilities = torch.softmax(logits, dim=-1).numpy()

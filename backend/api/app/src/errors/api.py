@@ -5,7 +5,7 @@ class APIError(Exception):
     """Base exception for all API errors with status code and optional payload."""
 
     def __init__(self, message, status_code=400, payload=None):
-        super().__init__(self)
+        super().__init__(message)
         self.message = message
         self.status_code = status_code
         self.payload = payload
