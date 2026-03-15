@@ -245,7 +245,7 @@ export default function Research() {
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-12">
               <div className="sm:col-span-4">
                 <h3 className="text-2xl font-bold mb-2">4.1 MelodyLSTM</h3>
-                <p className="text-sm text-white/30 font-mono">V1\u2013V6</p>
+                <p className="text-sm text-white/30 font-mono">{`V1\u2013V6`}</p>
               </div>
               <div className="sm:col-span-8 space-y-4 text-white/50 leading-relaxed">
                 <p>
@@ -273,7 +273,7 @@ export default function Research() {
             <div className="grid grid-cols-1 sm:grid-cols-12 gap-12">
               <div className="sm:col-span-4">
                 <h3 className="text-2xl font-bold mb-2">4.2 MusicTransformer</h3>
-                <p className="text-sm text-white/30 font-mono">V7\u2013V8</p>
+                <p className="text-sm text-white/30 font-mono">{`V7\u2013V8`}</p>
               </div>
               <div className="sm:col-span-8 space-y-4 text-white/50 leading-relaxed">
                 <p>
