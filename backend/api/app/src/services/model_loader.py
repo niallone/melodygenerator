@@ -133,7 +133,7 @@ async def get_available_models(model_dir):
         raise FileNotFoundError(f"Model directory not found: {model_dir}")
 
     models = {}
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
 
     # Collect model paths to load
     to_load: list[tuple[str, str, str, str]] = []

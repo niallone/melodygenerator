@@ -1,8 +1,16 @@
 from fastapi import Request
+from slowapi import Limiter
+from slowapi.util import get_remote_address
 
 from app.src.config import Settings
 
 _settings = None
+
+limiter = Limiter(key_func=get_remote_address)
+
+
+def get_limiter() -> Limiter:
+    return limiter
 
 
 def get_settings() -> Settings:

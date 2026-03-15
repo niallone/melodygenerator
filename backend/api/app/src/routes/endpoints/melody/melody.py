@@ -10,15 +10,12 @@ from typing import Optional
 from fastapi import APIRouter, HTTPException, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
-from slowapi import Limiter
-from slowapi.util import get_remote_address
 
+from app.src.dependencies import limiter
 from app.src.services.melody_generator import generate_melody as generate_melody_service
 from app.src.services.melody_generator import generate_melody_streaming
 from app.src.services.midi_service import convert_midi_to_wav, create_midi_from_tokens
 from app.src.services.storage import get_storage
-
-limiter = Limiter(key_func=get_remote_address)
 
 logger = logging.getLogger(__name__)
 
@@ -96,7 +93,7 @@ async def _upload_to_r2(settings, midi_file, wav_file):
     wav_basename = os.path.basename(wav_file) if wav_file else None
 
     if storage:
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         midi_key = f"melodies/{midi_basename}"
         midi_url = await loop.run_in_executor(None, storage.upload_file, midi_file, midi_key)
         wav_url = None
@@ -244,15 +241,14 @@ async def generate_melody_stream(websocket: WebSocket):
     """WebSocket endpoint for streaming melody generation."""
     await websocket.accept()
     client_ip = websocket.client.host if websocket.client else "unknown"
+    # Per-IP connection limit (check before incrementing)
+    current = _ws_connections.get(client_ip, 0)
+    if current >= _WS_MAX_PER_IP:
+        await websocket.send_json({"type": "error", "message": "Too many concurrent connections"})
+        await websocket.close()
+        return
+    _ws_connections[client_ip] = current + 1
     try:
-        # Per-IP connection limit
-        current = _ws_connections.get(client_ip, 0)
-        if current >= _WS_MAX_PER_IP:
-            await websocket.send_json({"type": "error", "message": "Too many concurrent connections"})
-            await websocket.close()
-            return
-        _ws_connections[client_ip] = current + 1
-
         async with _ws_semaphore:
             config = await websocket.receive_json()
 
@@ -281,6 +277,8 @@ async def generate_melody_stream(websocket: WebSocket):
             top_k = config.get("top_k", 50)
             top_p = config.get("top_p", 0.95)
             midi_program = config.get("instrument", 0)
+            if midi_program not in VALID_INSTRUMENT_IDS:
+                midi_program = 0
 
             errors = []
             if not isinstance(num_notes, int) or not (50 <= num_notes <= 2000):
@@ -334,7 +332,7 @@ async def generate_melody_stream(websocket: WebSocket):
 
             bundle = models[model_id]
             tokenizer = bundle.tokenizer
-            loop = asyncio.get_event_loop()
+            loop = asyncio.get_running_loop()
 
             if tokenizer and token_ids:
                 await loop.run_in_executor(None, create_midi_from_tokens, token_ids, tokenizer, midi_file, midi_program)
@@ -387,12 +385,14 @@ async def generate_melody_stream(websocket: WebSocket):
 @router.get("/gallery")
 async def get_gallery(request: Request, limit: int = 20, offset: int = 0):
     db = request.app.state.pg_db
+    safe_limit = max(1, min(limit, 50))
+    safe_offset = max(0, offset)
     rows = await db.fetch(
         """SELECT id, model_id, instrument_name, midi_file, wav_file, temperature, num_notes, created,
                   COUNT(*) OVER () AS total
            FROM generated_melody ORDER BY created DESC LIMIT $1 OFFSET $2""",
-        min(limit, 50),
-        max(offset, 0),
+        safe_limit,
+        safe_offset,
     )
     total = rows[0]["total"] if rows else 0
     return {

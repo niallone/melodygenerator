@@ -101,20 +101,17 @@ def _generate_notes_transformer_sync(
     model.eval()
     with torch.no_grad():
         if hasattr(model, "generate_step"):
-            # Prefill: run the full seed through the model to build KV cache
+            # Prefill: build KV cache and get first token logits in a single pass
             input_seq = sequence[-max_seq_len:]
             input_tensor = torch.LongTensor([input_seq])
-            logits = model(input_tensor)
-            next_logits = logits[0, -1, :]
-            index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
-            sequence.append(index)
-
-            # Build KV cache from prefill
             x = model.token_embedding(input_tensor)
             kv_caches = []
             for layer in model.layers:
                 x, cache = layer(x)
                 kv_caches.append(cache)
+            next_logits = model.output_proj(model.ln_f(x))[0, -1, :]
+            index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
+            sequence.append(index)
 
             # Incremental generation with KV cache
             pos = len(input_seq)
@@ -180,7 +177,7 @@ async def generate_melody(
     if bundle.seeds is None:
         raise ValueError(f"No seed sequences available for model {model_id}")
 
-    loop = asyncio.get_event_loop()
+    loop = asyncio.get_running_loop()
     generated_ids = None
     generated_notes = None
 
@@ -300,7 +297,7 @@ async def generate_melody_streaming(
             use_kv_cache = hasattr(bundle.model, "generate_step")
 
             if use_kv_cache:
-                # Prefill: build KV cache from seed sequence
+                # Prefill: build KV cache and get first token logits in a single pass
                 input_seq = sequence[-max_seq_len:]
                 input_tensor = torch.LongTensor([input_seq])
                 x = bundle.model.token_embedding(input_tensor)
@@ -308,9 +305,7 @@ async def generate_melody_streaming(
                 for layer in bundle.model.layers:
                     x, cache = layer(x)
                     kv_caches.append(cache)
-
-                logits = bundle.model(input_tensor)
-                next_logits = logits[0, -1, :]
+                next_logits = bundle.model.output_proj(bundle.model.ln_f(x))[0, -1, :]
                 index = sample_with_top_k_top_p(next_logits, temperature=temperature, top_k=top_k, top_p=top_p)
                 sequence.append(index)
                 pos = len(input_seq)

@@ -111,7 +111,7 @@ class PostgresDatabase:
                             f"Operation failed, retrying (attempt {attempt + 1}/{max_retries}): {str(e)}"
                         )
                         await asyncio.sleep(delay)
-                        if self.pool.is_closing():
+                        if self.pool is None or self.pool.is_closing():
                             await self.initialise()
 
             return wrapper

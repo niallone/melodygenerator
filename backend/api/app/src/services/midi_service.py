@@ -123,5 +123,5 @@ def token_to_note_event(token_id, tokenizer, index, current_offset):
                 "offset": current_offset,
             }
     except Exception:
-        pass
+        logger.debug(f"Could not convert token {token_id} to note event", exc_info=True)
     return None
