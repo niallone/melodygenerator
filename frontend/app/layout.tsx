@@ -41,6 +41,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             </div>
           </ErrorBoundary>
         </Providers>
+        <script defer src="https://t.melodygenerator.fun/script.js" data-website-id="c371cafa-7c4e-4f82-8069-ba7fa05c0ced" />
       </body>
     </html>
   );
